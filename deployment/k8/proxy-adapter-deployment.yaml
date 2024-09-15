@@ -1,0 +1,80 @@
+ # Copyright (C) 2024 Google LLC
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ # use this file except in compliance with the License. You may obtain a copy of
+ # the License at
+ #
+ #   http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ # License for the specific language governing permissions and limitations under
+ # the License.
+ 
+# # Manifest file without OTEL sidecar
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: spanner-adaptor
+  name: spanner-adaptor-app
+  namespace: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: spanner-adaptor
+  template: # Pod template
+    metadata:
+      labels:
+        run: spanner-adaptor # Labels Pods from this Deployment
+    spec:
+      containers:
+      - name: spanner-adaptor
+        image: REGION-docker.pkg.dev/GCP_PRO_ID/ARTIFACT_REGISTRY/IMA_NAME:IMG_TAG
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+          limits:
+            memory: "1Gi"
+            cpu: "2"
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: "/var/run/secret/cloud.google.com/spanner-adaptor-service-account.json"
+          - name: SPANNER_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: app-secret-env-variable
+                key: spanner-db-name
+          - name: SPANNER_INSTANCE
+            valueFrom:
+              secretKeyRef:
+                name: app-secret-env-variable
+                key: spanner-instance
+          - name: SPANNER_NUM_CHANNELS
+            valueFrom:
+              secretKeyRef:
+                name: app-secret-env-variable
+                key: spanner-num-channels
+          - name: SPANNER_CONFIG_TABLE
+            valueFrom:
+              secretKeyRef:
+                name: app-secret-env-variable
+                key: spanner-config-table
+          - name: GCP_PROJECT_ID
+            valueFrom:
+              secretKeyRef:
+                name: app-secret-env-variable
+                key: gcp_project_id
+        volumeMounts:
+          - name: "service-account"
+            mountPath: "/var/run/secret/cloud.google.com"
+        command: [ "./cassandra-to-spanner-proxy" ]
+        ports:
+# Ports will be populated here dynamically
+      volumes:
+        - name: "service-account"
+          secret:
+            secretName: "app-secret-env-variable"
