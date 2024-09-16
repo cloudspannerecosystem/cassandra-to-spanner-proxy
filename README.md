@@ -1,11 +1,11 @@
-# Cassandra to Cloud Spanner Proxy Adaptor
+# Cassandra to Cloud Spanner Proxy Adapter
 
 ## Current Released  Version
 
 Version `1.0.0`
 
 ## Introduction
-Cassandra to Cloud Spanner Proxy Adaptor is designed to forward your application's CQL traffic to Spanner database service. It listens on a local address and securely forwards that traffic.
+Cassandra to Cloud Spanner Proxy Adapter is designed to forward your application's CQL traffic to Spanner database service. It listens on a local address and securely forwards that traffic.
 
 ## Table of Contents
 
@@ -30,7 +30,7 @@ Cassandra to Cloud Spanner Proxy Adaptor is designed to forward your application
 - [Frequently Asked Questions](./docs/faq.md)
 ## When to use cassandra-to-spanner-proxy ?
 
-`cassandra-to-spanner-proxy`  enables applications that are currently using Apache Cassandra or DataStax Enterprise (DSE) and would like to switch to use Cloud Spanner. This Proxy Adaptor can be used as Plug-N-Play for the Client Application without the need of any code changes in the Client Application.
+`cassandra-to-spanner-proxy`  enables applications that are currently using Apache Cassandra or DataStax Enterprise (DSE) and would like to switch to use Cloud Spanner. This Proxy Adapter can be used as Plug-N-Play for the Client Application without the need of any code changes in the Client Application.
 
 ## Prerequisites
 
@@ -54,7 +54,7 @@ gcloud config set project [MY_PROJECT_NAME]
 
 ## Cloud Spanner Instructions
 
-- Database and all the tables should be created in advance before executing the queries using the adaptor.
+- Database and all the tables should be created in advance before executing the queries using the adapter.
 - A table should be created as below which will have the metadata information of the cassandra tables and its columns.
 
     ```sql
@@ -73,7 +73,7 @@ gcloud config set project [MY_PROJECT_NAME]
 
 ## Getting started
 
-We can setup the `cassandra-to-spanner-proxy` adaptor via 3 different methods as mentioned below
+We can setup the `cassandra-to-spanner-proxy` adapter via 3 different methods as mentioned below
 
 - Locally build and run `cassandra-to-spanner-proxy`
 - Run a docker image that has `cassandra-to-spanner-proxy` installed
@@ -82,7 +82,7 @@ We can setup the `cassandra-to-spanner-proxy` adaptor via 3 different methods as
 
 ### Locally build and run
 
-Steps to run the adaptor locally are as mentioned below:
+Steps to run the adapter locally are as mentioned below:
 
 - Clone the repository (https://github.com/ollionorg/cassandra-to-spanner-proxy.git)
 - Update `config.yaml` (or set up the `CONFIG_FILE` environment variable with the appropriate config file path), to specify listeners, project, instance, database details as well as additional configuration like enabling/disabling OTEL, keyspace flattening , Spanner session related configuration etc. See [advanced config options](docs/config_options.md) for more details.
@@ -138,7 +138,7 @@ Steps to run the adaptor locally are as mentioned below:
 - [Infrastructure provisioning on GCP](./deployment/infra-tf/README.md)
 
 ### CQLSH with proxy
- User can connect and use `cqlsh` with proxy. Detailed document -  [cqlsh.md](./docs/cqlsh.md)
+ Users can connect and use `cqlsh` with the proxy. Detailed document -  [cqlsh.md](./docs/cqlsh.md)
 
 ## Limitations for Proxy Application
 
