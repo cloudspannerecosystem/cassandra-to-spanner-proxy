@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 	"go.uber.org/zap"
 )
 

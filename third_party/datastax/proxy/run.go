@@ -30,8 +30,8 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )

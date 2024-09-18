@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ollionorg/cassandra-to-spanner-proxy/translator"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
 
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
@@ -29,9 +29,9 @@ import (
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/message"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 	"go.uber.org/zap"
 )
 

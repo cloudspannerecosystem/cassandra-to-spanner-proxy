@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	cql "github.com/ollionorg/cassandra-to-spanner-proxy/translator/cqlparser"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	cql "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator/cqlparser"
 )
 
 func Test_convertMapString(t *testing.T) {

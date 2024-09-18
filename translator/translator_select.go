@@ -23,9 +23,9 @@ import (
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	cql "github.com/ollionorg/cassandra-to-spanner-proxy/translator/cqlparser"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	cql "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator/cqlparser"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 )
 
 const excludeInternalColumns = " EXCEPT (`" + spannerTSColumn + "`, `" + spannerTTLColumn + "`)"

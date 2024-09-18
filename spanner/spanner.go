@@ -28,13 +28,13 @@ import (
 
 	"cloud.google.com/go/spanner"
 	"cloud.google.com/go/spanner/apiv1/spannerpb"
+	otelgo "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/otel"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/responsehandler"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/message"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	otelgo "github.com/ollionorg/cassandra-to-spanner-proxy/otel"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/responsehandler"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
@@ -1000,7 +1000,9 @@ func (sc *SpannerClient) filterBatch(ctx context.Context, txn *spanner.ReadWrite
 				canExecuteAsBatch = false
 			}
 			if canExecuteAsMutations && query.QueryType != insertType {
-				canExecuteAsMutations = false
+				if query.QueryType == updateType || (query.QueryType == deleteType && len(query.MutationKeyRange) == 0) {
+					canExecuteAsMutations = false
+				}
 			}
 			nonFilterableQueries = append(nonFilterableQueries, query)
 			if onlyInserts {

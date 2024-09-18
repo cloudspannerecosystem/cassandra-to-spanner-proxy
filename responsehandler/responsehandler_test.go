@@ -25,10 +25,10 @@ import (
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/message"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/responsehandler"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/responsehandler"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 	"go.uber.org/zap"
 )
 

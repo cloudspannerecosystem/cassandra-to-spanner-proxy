@@ -84,7 +84,7 @@ We can setup the `cassandra-to-spanner-proxy` adapter via 3 different methods as
 
 Steps to run the adapter locally are as mentioned below:
 
-- Clone the repository (https://github.com/ollionorg/cassandra-to-spanner-proxy.git)
+- Clone the repository (https://github.com/cloudspannerecosystem/cassandra-to-spanner-proxy.git)
 - Update `config.yaml` (or set up the `CONFIG_FILE` environment variable with the appropriate config file path), to specify listeners, project, instance, database details as well as additional configuration like enabling/disabling OTEL, keyspace flattening , Spanner session related configuration etc. See [advanced config options](docs/config_options.md) for more details.
     ```yaml
     cassandra_to_spanner_configs:

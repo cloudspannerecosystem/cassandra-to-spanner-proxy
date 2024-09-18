@@ -24,11 +24,11 @@ import (
 	message "github.com/datastax/go-cassandra-native-protocol/message"
 	mock "github.com/stretchr/testify/mock"
 
-	responsehandler "github.com/ollionorg/cassandra-to-spanner-proxy/responsehandler"
+	responsehandler "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/responsehandler"
 
-	spanner "github.com/ollionorg/cassandra-to-spanner-proxy/spanner"
+	spanner "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/spanner"
 
-	tableConfig "github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
+	tableConfig "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
 
 )
 

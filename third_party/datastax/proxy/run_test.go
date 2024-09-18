@@ -45,7 +45,7 @@ import (
 // 	"testing"
 // 	"time"
 
-// 	"github.com/ollionorg/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
+// 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 // 	"github.com/datastax/go-cassandra-native-protocol/message"
 // 	"github.com/datastax/go-cassandra-native-protocol/primitive"
 // 	"github.com/stretchr/testify/assert"

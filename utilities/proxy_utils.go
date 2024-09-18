@@ -27,7 +27,7 @@ import (
 	"github.com/datastax/go-cassandra-native-protocol/message"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	"github.com/natefinch/lumberjack"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

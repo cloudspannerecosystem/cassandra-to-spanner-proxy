@@ -27,7 +27,7 @@ RUN go mod download
 COPY . ./
 
 # Build and install binary
-RUN go install github.com/ollionorg/cassandra-to-spanner-proxy
+RUN go install github.com/cloudspannerecosystem/cassandra-to-spanner-proxy
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /go/bin/cassandra-to-spanner-proxy .
 

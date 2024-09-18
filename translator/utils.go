@@ -26,8 +26,8 @@ import (
 
 	"cloud.google.com/go/spanner"
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	cql "github.com/ollionorg/cassandra-to-spanner-proxy/translator/cqlparser"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	cql "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator/cqlparser"
 )
 
 const (

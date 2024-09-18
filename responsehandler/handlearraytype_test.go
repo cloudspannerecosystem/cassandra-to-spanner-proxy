@@ -26,8 +26,8 @@ import (
 	"cloud.google.com/go/spanner"
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/responsehandler"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/responsehandler"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 	"github.com/tj/assert"
 	"go.uber.org/zap"
 )

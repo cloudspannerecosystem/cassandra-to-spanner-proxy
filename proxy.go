@@ -21,7 +21,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/ollionorg/cassandra-to-spanner-proxy/third_party/datastax/proxy"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxy"
 )
 
 func main() {

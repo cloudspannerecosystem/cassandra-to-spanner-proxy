@@ -18,7 +18,7 @@ package translator
 
 import (
 	"github.com/datastax/go-cassandra-native-protocol/message"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
 	"go.uber.org/zap"
 )
 

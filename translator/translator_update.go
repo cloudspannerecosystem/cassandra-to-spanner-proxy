@@ -24,9 +24,9 @@ import (
 
 	"errors"
 
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	cql "github.com/ollionorg/cassandra-to-spanner-proxy/translator/cqlparser"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	cql "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator/cqlparser"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 )
 
 func parseAssignments(assignments []cql.IAssignmentElementContext, tableName string, tableConfig *tableConfig.TableConfig) (*UpdateSetResponse, error) {

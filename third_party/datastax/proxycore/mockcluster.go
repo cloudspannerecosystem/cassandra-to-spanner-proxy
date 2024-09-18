@@ -27,7 +27,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ollionorg/cassandra-to-spanner-proxy/third_party/datastax/parser"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/parser"
 
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/frame"

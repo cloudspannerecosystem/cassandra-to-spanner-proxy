@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ollionorg/cassandra-to-spanner-proxy/third_party/datastax/parser"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/parser"
 )
 
 var queries = []struct {

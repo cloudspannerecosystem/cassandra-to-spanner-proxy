@@ -1,4 +1,4 @@
-module github.com/ollionorg/cassandra-to-spanner-proxy
+module github.com/cloudspannerecosystem/cassandra-to-spanner-proxy
 
 go 1.21
 

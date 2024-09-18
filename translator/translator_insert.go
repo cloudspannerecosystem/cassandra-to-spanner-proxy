@@ -24,9 +24,9 @@ import (
 	"errors"
 
 	"cloud.google.com/go/spanner"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/tableConfig"
-	cql "github.com/ollionorg/cassandra-to-spanner-proxy/translator/cqlparser"
-	"github.com/ollionorg/cassandra-to-spanner-proxy/utilities"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	cql "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator/cqlparser"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 )
 
 // parseColumnsAndValuesFromInsert parses columns and values from the Insert query
