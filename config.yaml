@@ -11,7 +11,7 @@
  # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  # License for the specific language governing permissions and limitations under
  # the License.
- 
+
 cassandra_to_spanner_configs:
   # [Optional] Global default GCP Project ID
   projectId: YOUR_PROJECT_ID
@@ -115,6 +115,16 @@ otel:
   # Name of the collector service to be setup as a sidecar
   serviceName: YOUR_OTEL_COLLECTOR_SERVICE_NAME
   healthcheck:
+    # Enable the health check in this proxy application config only if the
+    # "health_check" extension is added to the OTEL collector service configuration.
+    #
+    # Recommendation:
+    # Enable the OTEL health check if you need to verify the collector's availability
+    # at the start of the application. For development or testing environments, it can
+    # be safely disabled to reduce complexity.
+
+    # Enable/Disable Health Check for OTEL, Default 'False'.
+    enabled: False
     # Health check endpoint for the OTEL collector service
     endpoint: YOUR_OTEL_COLLECTOR_HEALTHCHECK_ENDPOINT
   metrics:

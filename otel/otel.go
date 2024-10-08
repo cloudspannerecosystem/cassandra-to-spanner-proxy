@@ -69,15 +69,16 @@ type TelemetryInitializer interface {
 
 // OTelConfig holds configuration for OpenTelemetry.
 type OTelConfig struct {
-	TracerEndpoint   string
-	MetricEndpoint   string
-	ServiceName      string
-	TraceSampleRatio float64
-	OTELEnabled      bool
-	Database         string
-	Instance         string
-	HealthCheckEp    string
-	ServiceVersion   string
+	TracerEndpoint     string
+	MetricEndpoint     string
+	ServiceName        string
+	TraceSampleRatio   float64
+	OTELEnabled        bool
+	Database           string
+	Instance           string
+	HealthCheckEnabled bool
+	HealthCheckEp      string
+	ServiceVersion     string
 }
 
 const (
@@ -116,14 +117,16 @@ func NewOpenTelemetry(ctx context.Context, config *OTelConfig, logger *zap.Logge
 	}
 	otelInst.attributeMap = append(otelInst.attributeMap, attributeMap...)
 
-	resp, err := http.Get("http://" + config.HealthCheckEp)
-	if err != nil {
-		return otelInst, nil, err
+	if config.HealthCheckEnabled {
+		resp, err := http.Get("http://" + config.HealthCheckEp)
+		if err != nil {
+			return otelInst, nil, err
+		}
+		if resp.StatusCode != 200 {
+			return otelInst, nil, errors.New("OTEL collector service is not up and running")
+		}
+		logger.Info("OTEL health check COMPLETE")
 	}
-	if resp.StatusCode != 200 {
-		return otelInst, nil, errors.New("MetricEndpoint is not up and running")
-	}
-
 	var shutdownFuncs []func(context.Context) error
 	resource := otelInst.createResource(ctx)
 

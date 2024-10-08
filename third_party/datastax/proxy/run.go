@@ -29,9 +29,9 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
+	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )
@@ -41,6 +41,7 @@ var (
 	clusterReleaseversion = "4.0.0.6816"
 	defaultCqlVersion     = "3.4.5"
 	TCP_BIND_PORT         = "0.0.0.0:%s"
+	proxyReleaseVersion   = "v1.0.0"
 )
 var readFile = os.ReadFile
 
@@ -67,6 +68,7 @@ type OtelConfig struct {
 	EnabledClientSideMetrics bool   `yaml:"enabledClientSideMetrics"`
 	ServiceName              string `yaml:"serviceName"`
 	HealthCheck              struct {
+		Enabled  bool   `yaml:"enabled"`
 		Endpoint string `yaml:"endpoint"`
 	} `yaml:"healthcheck"`
 	Metrics struct {
@@ -249,7 +251,7 @@ func Run(ctx context.Context, args []string) int {
 	}
 	defer logger.Sync()
 	if cfg.Version {
-		cliCtx.Printf("Version - 1.0.0")
+		cliCtx.Printf("Version - " + proxyReleaseVersion)
 		return 0
 	}
 
@@ -310,6 +312,7 @@ func Run(ctx context.Context, args []string) int {
 			OtelConfig:      UserConfig.Otel,
 			KeyspaceFlatter: UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter,
 			Debug:           cfg.Debug,
+			UserAgent:       "cassandra-adapter/" + proxyReleaseVersion,
 		})
 
 		if err1 != nil {

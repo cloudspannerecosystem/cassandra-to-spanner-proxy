@@ -37,12 +37,12 @@ import (
 	"cloud.google.com/go/spanner/admin/instance/apiv1/instancepb"
 	"cloud.google.com/go/spanner/apiv1/spannerpb"
 	"cloud.google.com/go/spanner/spansql"
-	"github.com/datastax/go-cassandra-native-protocol/datatype"
-	"github.com/datastax/go-cassandra-native-protocol/message"
-	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/responsehandler"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
+	"github.com/datastax/go-cassandra-native-protocol/datatype"
+	"github.com/datastax/go-cassandra-native-protocol/message"
+	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/zap"
@@ -50,21 +50,22 @@ import (
 )
 
 var (
-	INSERT_COMM_UPLOAD              = "INSERT OR UPDATE INTO  keyspace1_comm_upload_event (`user_id`, `upload_time`, `comm_event`, `spanner_ttl_ts`, `last_commit_ts`)  values(@user_id, @upload_time,@comm_event,@ttl_ts, @last_commit_ts )"
-	DELETE_COMM_UPLOAD_RANGE        = "DELETE FROM keyspace1_comm_upload_event WHERE `last_commit_ts` <= @tsValue AND `user_id` = @value1"
-	DELETE_COMM_UPLOAD              = "DELETE FROM keyspace1_comm_upload_event WHERE `last_commit_ts` <= @tsValue AND `user_id` = @value1 and `upload_time` = @value2"
-	DELETE_ADDRESS_BOOK             = "DELETE FROM keyspace1_address_book_entries WHERE `last_commit_ts` <= @tsValue AND `user_id` = @value1"
-	Table_COMM_UPLOAD               = "keyspace1_comm_upload_event"
-	KEYSPACE                        = "keyspace1"
-	QUERY_TYPE_INSERT               = "insert"
-	QUERY_TYPE_DELETE               = "delete"
-	QUERY_TYPE_UPDATE               = "update"
-	ErrorWhileFilterAndExecuteBatch = "Error while executing FilterAndExecuteBatch : %v"
-	ErrorWhileFilterBatch           = "Error while executing FilterBatch : %v"
-	UsingTsCheckQueryCommUpload     = "SELECT last_commit_ts FROM keyspace1_comm_upload_event WHERE `user_id` = @user_id AND `upload_time` = @upload_time AND `last_commit_ts` > @last_commit_ts"
-	LAST_COMMIT_TS                  = "last_commit_ts"
-	TTL_TS                          = "ttl_ts"
-	TABLE_ADDRESS                   = "keyspace1_address_book_entries"
+	INSERT_COMM_UPLOAD                  = "INSERT OR UPDATE INTO  keyspace1_comm_upload_event (`user_id`, `upload_time`, `comm_event`, `spanner_ttl_ts`, `last_commit_ts`)  values(@user_id, @upload_time,@comm_event,@ttl_ts, @last_commit_ts )"
+	DELETE_COMM_UPLOAD_RANGE            = "DELETE FROM keyspace1_comm_upload_event WHERE `last_commit_ts` <= @tsValue AND `user_id` = @value1"
+	DELETE_COMM_UPLOAD_RANGE_WITHOUT_TS = "DELETE FROM keyspace1_comm_upload_event WHERE`user_id` = @value1"
+	DELETE_COMM_UPLOAD                  = "DELETE FROM keyspace1_comm_upload_event WHERE `last_commit_ts` <= @tsValue AND `user_id` = @value1 and `upload_time` = @value2"
+	DELETE_ADDRESS_BOOK                 = "DELETE FROM keyspace1_address_book_entries WHERE `last_commit_ts` <= @tsValue AND `user_id` = @value1"
+	Table_COMM_UPLOAD                   = "keyspace1_comm_upload_event"
+	KEYSPACE                            = "keyspace1"
+	QUERY_TYPE_INSERT                   = "insert"
+	QUERY_TYPE_DELETE                   = "delete"
+	QUERY_TYPE_UPDATE                   = "update"
+	ErrorWhileFilterAndExecuteBatch     = "Error while executing FilterAndExecuteBatch : %v"
+	ErrorWhileFilterBatch               = "Error while executing FilterBatch : %v"
+	UsingTsCheckQueryCommUpload         = "SELECT last_commit_ts FROM keyspace1_comm_upload_event WHERE `user_id` = @user_id AND `upload_time` = @upload_time AND `last_commit_ts` > @last_commit_ts"
+	LAST_COMMIT_TS                      = "last_commit_ts"
+	TTL_TS                              = "ttl_ts"
+	TABLE_ADDRESS                       = "keyspace1_address_book_entries"
 )
 
 const (
@@ -1991,6 +1992,7 @@ func TestFilterBatch(t *testing.T) {
 			} else {
 
 				assert.Equal(t, true, filteredResp.CanExecuteAsBatch, fmt.Sprintf("expected canExecuteAsBatch = true but got %v", filteredResp.CanExecuteAsBatch))
+				assert.Equal(t, false, filteredResp.CanExecuteAsMutations, fmt.Sprintf("expected canExecuteAsMutations = true but got %v", filteredResp.CanExecuteAsMutations))
 				assert.Equal(t, 1, len(filteredResp.Queries), fmt.Sprintf("expected 1 queries but got %d", len(filteredResp.Queries)))
 			}
 			return nil
@@ -2035,6 +2037,100 @@ func TestFilterBatch(t *testing.T) {
 				t.Errorf(ErrorWhileFilterBatch, err)
 			} else {
 				assert.Equal(t, true, filteredResp.CanExecuteAsBatch, fmt.Sprintf("MultipleInsertFollowedByRangeDeleteFilterBatchCase2 - expected canExecuteAsBatch = true but got %v", filteredResp.CanExecuteAsBatch))
+				assert.Equal(t, false, filteredResp.CanExecuteAsMutations, fmt.Sprintf("expected canExecuteAsMutations = true but got %v", filteredResp.CanExecuteAsMutations))
+				assert.Equal(t, 2, len(filteredResp.Queries), fmt.Sprintf("MultipleInsertFollowedByRangeDeleteFilterBatchCase2 - expected 6 queries but got %d", len(filteredResp.Queries)))
+			}
+			return nil
+		})
+	})
+
+	t.Run("INSERT and DELETE via Mutations", func(t *testing.T) {
+		queries := []*responsehandler.QueryMetadata{}
+		tsValue := time.Now()
+		for i := 0; i < 5; i++ {
+			query := &responsehandler.QueryMetadata{
+				Query:        INSERT_COMM_UPLOAD,
+				TableName:    Table_COMM_UPLOAD,
+				KeyspaceName: KEYSPACE,
+				ProtocalV:    4,
+				QueryType:    QUERY_TYPE_INSERT,
+				Params: map[string]interface{}{
+					LAST_COMMIT_TS: &tsValue,
+					TTL_TS:         time.Now().Add(time.Second * 5),
+					"user_id":      "diff_pk_2",
+					"upload_time":  510000,
+					"comm_event":   []byte(fmt.Sprintf("XYZ-%d", i)),
+				},
+				Paramkeys:    []string{"user_id", "upload_time", "comm_event", LAST_COMMIT_TS},
+				ParamValues:  []interface{}{"diff_pk_2", 510000, []byte(fmt.Sprintf("XYZ-%d", i)), &tsValue},
+				PrimaryKeys:  []string{"user_id", "upload_time"},
+				UsingTSCheck: UsingTsCheckQueryCommUpload,
+			}
+			queries = append(queries, query)
+		}
+		queries = append(queries, &responsehandler.QueryMetadata{
+			Query:            DELETE_COMM_UPLOAD_RANGE_WITHOUT_TS,
+			QueryType:        QUERY_TYPE_DELETE,
+			TableName:        Table_COMM_UPLOAD,
+			KeyspaceName:     KEYSPACE,
+			ProtocalV:        4,
+			Params:           map[string]interface{}{"value1": "diff_pk_2"},
+			PrimaryKeys:      []string{"user_id", "upload_time"},
+			MutationKeyRange: []interface{}{"diff_pk_2"},
+		})
+		_, _ = sc.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+			filteredResp, err := sc.filterBatch(ctx, txn, queries)
+			if err != nil {
+				t.Errorf(ErrorWhileFilterBatch, err)
+			} else {
+				assert.Equal(t, true, filteredResp.CanExecuteAsBatch, fmt.Sprintf("MultipleInsertFollowedByRangeDeleteFilterBatchCase2 - expected canExecuteAsBatch = true but got %v", filteredResp.CanExecuteAsBatch))
+				assert.Equal(t, true, filteredResp.CanExecuteAsMutations, fmt.Sprintf("expected canExecuteAsMutations = true but got %v", filteredResp.CanExecuteAsMutations))
+				assert.Equal(t, 2, len(filteredResp.Queries), fmt.Sprintf("MultipleInsertFollowedByRangeDeleteFilterBatchCase2 - expected 6 queries but got %d", len(filteredResp.Queries)))
+			}
+			return nil
+		})
+	})
+
+	t.Run("INSERT and DELETE with batch update", func(t *testing.T) {
+		queries := []*responsehandler.QueryMetadata{}
+		tsValue := time.Now()
+		for i := 0; i < 5; i++ {
+			query := &responsehandler.QueryMetadata{
+				Query:        INSERT_COMM_UPLOAD,
+				TableName:    Table_COMM_UPLOAD,
+				KeyspaceName: KEYSPACE,
+				ProtocalV:    4,
+				QueryType:    QUERY_TYPE_INSERT,
+				Params: map[string]interface{}{
+					LAST_COMMIT_TS: &tsValue,
+					TTL_TS:         time.Now().Add(time.Second * 5),
+					"user_id":      "diff_pk_2",
+					"upload_time":  510000,
+					"comm_event":   []byte(fmt.Sprintf("XYZ-%d", i)),
+				},
+				Paramkeys:    []string{"user_id", "upload_time", "comm_event", LAST_COMMIT_TS},
+				ParamValues:  []interface{}{"diff_pk_2", 510000, []byte(fmt.Sprintf("XYZ-%d", i)), &tsValue},
+				PrimaryKeys:  []string{"user_id", "upload_time"},
+				UsingTSCheck: UsingTsCheckQueryCommUpload,
+			}
+			queries = append(queries, query)
+		}
+		queries = append(queries, &responsehandler.QueryMetadata{
+			Query:        DELETE_COMM_UPLOAD,
+			QueryType:    QUERY_TYPE_DELETE,
+			TableName:    Table_COMM_UPLOAD,
+			KeyspaceName: KEYSPACE,
+			ProtocalV:    4,
+			Params:       map[string]interface{}{"value1": "diff_pk_2"},
+			PrimaryKeys:  []string{"user_id", "upload_time"},
+		})
+		_, _ = sc.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+			filteredResp, err := sc.filterBatch(ctx, txn, queries)
+			if err != nil {
+				t.Errorf(ErrorWhileFilterBatch, err)
+			} else {
+				assert.Equal(t, true, filteredResp.CanExecuteAsBatch, fmt.Sprintf("MultipleInsertFollowedByRangeDeleteFilterBatchCase2 - expected canExecuteAsBatch = true but got %v", filteredResp.CanExecuteAsBatch))
+				assert.Equal(t, false, filteredResp.CanExecuteAsMutations, fmt.Sprintf("expected canExecuteAsMutations = true but got %v", filteredResp.CanExecuteAsMutations))
 				assert.Equal(t, 2, len(filteredResp.Queries), fmt.Sprintf("MultipleInsertFollowedByRangeDeleteFilterBatchCase2 - expected 6 queries but got %d", len(filteredResp.Queries)))
 			}
 			return nil

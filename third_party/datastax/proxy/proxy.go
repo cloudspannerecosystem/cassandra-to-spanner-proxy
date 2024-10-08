@@ -30,11 +30,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/datastax/go-cassandra-native-protocol/datatype"
-	"github.com/datastax/go-cassandra-native-protocol/frame"
-	"github.com/datastax/go-cassandra-native-protocol/message"
-	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	lru "github.com/hashicorp/golang-lru"
 	otelgo "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/otel"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/responsehandler"
 	spannerModule "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/spanner"
@@ -44,6 +39,11 @@ import (
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
+	"github.com/datastax/go-cassandra-native-protocol/datatype"
+	"github.com/datastax/go-cassandra-native-protocol/frame"
+	"github.com/datastax/go-cassandra-native-protocol/message"
+	"github.com/datastax/go-cassandra-native-protocol/primitive"
+	lru "github.com/hashicorp/golang-lru"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
@@ -140,6 +140,7 @@ type Config struct {
 	PreparedCache   proxycore.PreparedCache
 	KeyspaceFlatter bool
 	Debug           bool
+	UserAgent       string
 }
 
 type SpannerConfig struct {
@@ -219,15 +220,16 @@ func NewProxy(ctx context.Context, config Config) (*Proxy, error) {
 	// Initialize OpenTelemetry
 	if config.OtelConfig.Enabled {
 		otelInit = &otelgo.OTelConfig{
-			TracerEndpoint:   config.OtelConfig.Traces.Endpoint,
-			MetricEndpoint:   config.OtelConfig.Metrics.Endpoint,
-			ServiceName:      config.OtelConfig.ServiceName,
-			OTELEnabled:      config.OtelConfig.Enabled,
-			TraceSampleRatio: config.OtelConfig.Traces.SamplingRatio,
-			Database:         config.SpannerConfig.DatabaseName,
-			Instance:         config.SpannerConfig.InstanceName,
-			HealthCheckEp:    config.OtelConfig.HealthCheck.Endpoint,
-			ServiceVersion:   config.Version.String(),
+			TracerEndpoint:     config.OtelConfig.Traces.Endpoint,
+			MetricEndpoint:     config.OtelConfig.Metrics.Endpoint,
+			ServiceName:        config.OtelConfig.ServiceName,
+			OTELEnabled:        config.OtelConfig.Enabled,
+			TraceSampleRatio:   config.OtelConfig.Traces.SamplingRatio,
+			Database:           config.SpannerConfig.DatabaseName,
+			Instance:           config.SpannerConfig.InstanceName,
+			HealthCheckEnabled: config.OtelConfig.HealthCheck.Enabled,
+			HealthCheckEp:      config.OtelConfig.HealthCheck.Endpoint,
+			ServiceVersion:     config.Version.String(),
 		}
 
 		otelInst, shutdownOTel, err = otelgo.NewOpenTelemetry(ctx, otelInit, config.Logger)
@@ -1936,7 +1938,7 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 		ActionOnInactiveTransaction: spanner.WarnAndClose,
 	}
 
-	cfg := spanner.ClientConfig{SessionPoolConfig: spc}
+	cfg := spanner.ClientConfig{SessionPoolConfig: spc, UserAgent: config.UserAgent}
 
 	// If OpenTelemetry is provided, configure instrumentation
 	if config.OtelConfig.Enabled && ot != nil {

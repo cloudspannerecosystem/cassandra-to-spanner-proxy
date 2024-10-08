@@ -24,6 +24,13 @@ Before enabling OTEL in your application, ensure that the collector service is u
 ### Step 1: Use the below config.yaml (or set up the `CONFIG_FILE` environment variable) file for OTEL collector service
 
 ```yaml
+  # Enable the health check in the proxy application config only if the
+  # "health_check" extension is added to this OTEL config for the collector service.
+  #
+  # Recommendation:
+  # Enable the OTEL health check if you need to verify the collector's availability
+  # at the start of the application. For development or testing environments, it can
+  # be safely disabled to reduce complexity.
 receivers:
   otlp:
     protocols:
@@ -82,12 +89,21 @@ Follow these steps to enable and configure OTEL in your application:
 
 2. **Example Configuration Block for OTEL:**
    ```yaml
+      # Enable the health check in this proxy application config only if the
+      # "health_check" extension is added to the OTEL collector service configuration.
+      #
+      # Recommendation:
+      # Enable the OTEL health check if you need to verify the collector's availability
+      # at the start of the application. For development or testing environments, it can
+      # be safely disabled to reduce complexity.
    otel:
        # Set enabled to true or false for OTEL metrics and traces
        enabled: True
        # Name of the collector service to be setup as a sidecar
        serviceName: YOUR_OTEL_COLLECTOR_SERVICE_NAME
        healthcheck:
+           # Enable/Disable Health Check for OTEL, Default 'False'.
+           enabled: False
            # Health check endpoint for the OTEL collector service
            endpoint: YOUR_OTEL_COLLECTOR_HEALTHCHECK_ENDPOINT
        metrics:
@@ -138,4 +154,3 @@ Run a curl command from the k8 pod to http://collector-ip:13133/health_check. Yo
 ![Alt text](./img/metrics-latency.png)
 
 - You can also view other metrics related to spanner library under the `Prometheus Target/Spanner` category.
-

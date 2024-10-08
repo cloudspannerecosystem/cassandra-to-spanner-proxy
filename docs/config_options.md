@@ -32,7 +32,7 @@ listeners:
 
         # [Optional] - Global else default to TableConfigurations
         configTableName: TableConfigurations
-    
+
         Session:
             # Minimum number of sessions that Spanner pool will always maintain.
             # Defaults to 100.
@@ -65,10 +65,22 @@ otel:
     # Set enabled to true or false for OTEL metrics and traces
     enabled: True
 
+    # Whether or not to enable client side metrics (such as sessions, gfe latency etc.)
+    enabledClientSideMetrics: False
+
     # Name of the collector service to be setup as a sidecar
     serviceName: YOUR_OTEL_COLLECTOR_SERVICE_NAME
-    
+
     healthcheck:
+        # Enable the health check in this proxy application config only if the
+        # "health_check" extension is added to the OTEL collector service configuration.
+        #
+        # Recommendation:
+        # Enable the OTEL health check if you need to verify the collector's availability
+        # at the start of the application. For development or testing environments, it can
+        # be safely disabled to reduce complexity.
+        # Enable/Disable Health Check for OTEL, Default 'False'.
+        enabled: False
         # Health check endpoint for the OTEL collector service
         endpoint: YOUR_OTEL_COLLECTOR_HEALTHCHECK_ENDPOINT
     metrics:
@@ -79,6 +91,34 @@ otel:
         endpoint: YOUR_OTEL_COLLECTOR_SERVICE_ENDPOINT
         #Sampling ratio should be between 0 and 1. Here 0.05 means 5/100 Sampling ratio.
         samplingRatio: YOUR_SAMPLING_RATIO
+
+loggerConfig:
+    # Specifies the type of output, here it is set to 'file' indicating logs will be written to a file.
+    # Value of `outputType` should be `file` for file type or `stdout` for standard output.
+    # Default value is `stdout`.
+    outputType: YOUR_LOG_OUTPUT_TYPE
+
+    # Set this only if the outputType is set to `file`.
+    # The path and name of the log file where logs will be stored. For example, output.log, Required Key.
+    # Default `/var/log/cassandra-to-spanner-proxy/output.log`.
+    fileName: YOUR_LOG_OUTPUT_PATH
+
+    # Set this only if the outputType is set to `file`.
+    # The maximum size of the log file in megabytes before it is rotated. For example, 500 for 500 MB. Default 100MB
+    maxSize: MAX_LOG_FILE_SIZE
+
+    # Set this only if the outputType is set to `file`.
+    # The maximum number of backup log files to keep. Once this limit is reached, the oldest log file will be deleted. Default '10'.
+    maxBackups: MAX_LOG_FILE_BACKUPS
+
+    # Set this only if the outputType is set to `file`.
+    # The maximum age in days for a log file to be retained. Logs older than this will be deleted. Required Key.
+    # Default 3 days
+    maxAge: MAX_LOG_FILE_AGE
+
+    # Set this only if the outputType is set to `file`.
+    # Default value is set to 'False'. Change the value to 'True' for compressing the log files.
+    compress: True
 ```
 
 # Example config.yaml
@@ -98,8 +138,10 @@ listeners:
 
 otel:
   enabled: True
+  enabledClientSideMetrics: True
   serviceName: cassandra-to-spanner-otel-service
   healthcheck:
+    enabled: True
     endpoint: localhost:13133
   metrics:
     endpoint: localhost:4317
@@ -107,4 +149,12 @@ otel:
   traces:
     endpoint: localhost:4317
     samplingRatio: 0.05
+
+loggerConfig:
+  outputType: file
+  fileName: output/output.log
+  maxSize: 10
+  maxBackups: 2
+  maxAge: 1
+  compress: True
 ```
