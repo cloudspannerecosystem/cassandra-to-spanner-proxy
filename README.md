@@ -168,3 +168,15 @@ See [Frequently Asked Questions](docs/faq.md) for answers to frequently asked qu
 ## License
 
 [Apache License 2.0](LICENSE)
+
+## Getting Support
+
+The Cassandra to Cloud Spanner Proxy Adapter is a [Cloud Spanner Ecosystem](https://www.cloudspannerecosystem.dev/about)
+project based on open source contributions. We'd love for you to
+[report issues, file feature requests][new-issue], and [send pull requests][new-pr]
+(see [Contributing](CONTRIBUTING.md)). You may file bugs and feature
+requests using GitHub's issue tracker or using the existing Cloud Spanner
+support channels.
+
+[new-issue]: https://github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/issues/new
+[new-pr]: https://github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/compare
