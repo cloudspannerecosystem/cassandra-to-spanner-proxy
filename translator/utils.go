@@ -241,7 +241,7 @@ func getUniqueSet(elements []string) []string {
 }
 
 func valueIsNull(value string) bool {
-	return value == "null"
+	return strings.ToLower(value) == "null"
 }
 
 // Function to format the cassandra values as per its spanner type.

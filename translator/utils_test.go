@@ -289,7 +289,7 @@ func Test_formatValues(t *testing.T) {
 		},
 		{
 			name:        "Int64 type with null value",
-			value:       "null",
+			value:       "NULL",
 			spannerType: "int64",
 			cqlType:     "",
 			expected:    nil,
