@@ -240,8 +240,15 @@ func getUniqueSet(elements []string) []string {
 	return result
 }
 
+func valueIsNull(value string) bool {
+	return value == "null"
+}
+
 // Function to format the cassandra values as per its spanner type.
 func formatValues(value string, spannerType string, cqlType string) (interface{}, error) {
+	if valueIsNull(value) {
+		return nil, nil
+	}
 	switch spannerType {
 	case "string":
 		return value, nil
