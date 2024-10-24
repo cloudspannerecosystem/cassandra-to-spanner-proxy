@@ -60,6 +60,8 @@ type CassandraToSpannerConfigs struct {
 	KeyspaceFlatter bool   `yaml:"keyspaceFlatter"`
 	ProjectID       string `yaml:"projectId"`
 	ConfigTableName string `yaml:"configTableName"`
+	UseRowTTL       bool   `yaml:"useRowTTL"`
+	UseRowTimestamp bool   `yaml:"useRowTimestamp"`
 }
 
 // OtelConfig defines the structure of the YAML configuration
@@ -311,6 +313,8 @@ func Run(ctx context.Context, args []string) int {
 			CQLVersion:      cqlVersion,
 			OtelConfig:      UserConfig.Otel,
 			KeyspaceFlatter: UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter,
+			UseRowTimestamp: UserConfig.CassandraToSpannerConfigs.UseRowTimestamp,
+			UseRowTTL:       UserConfig.CassandraToSpannerConfigs.UseRowTTL,
 			Debug:           cfg.Debug,
 			UserAgent:       "cassandra-adapter/" + proxyReleaseVersion,
 		})
