@@ -211,6 +211,11 @@ func Test_getSpannerColumnType(t *testing.T) {
 			want: "float64",
 		},
 		{
+			name: "convert double to float64",
+			args: args{c: "double"},
+			want: "float64",
+		},
+		{
 			name: "convert map<text, boolean> to array[string, bool]",
 			args: args{c: "map<text, boolean>"},
 			want: "array[string, bool]",
