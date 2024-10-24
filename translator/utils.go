@@ -314,7 +314,7 @@ func formatValues(value string, spannerType string, cqlType string) (interface{}
 //
 //	*regexp.Regexp: A compiled regular expression object.
 func createCombinedRegex() *regexp.Regexp {
-	keywords := []string{"time", "key", "type", "json"}
+	keywords := []string{"time", "key", "type", "json", "date", "trigger"}
 	combinedPattern := fmt.Sprintf("\\b(%s)\\b", regexp.QuoteMeta(keywords[0]))
 
 	for _, keyword := range keywords[1:] {
@@ -651,4 +651,43 @@ func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConf
 	response.Params = params
 	response.ParamKeys = paramKeys
 	return &response, nil
+}
+
+// Helper function to convert CQL type to Spanner DDL type
+func spannerDDLType(column Column) (string, error) {
+	switch column.SpannerType {
+	case "string", "text", "varchar":
+		return "STRING(MAX)", nil
+	case "timestamp":
+		return "TIMESTAMP", nil
+	case "int64", "bigint":
+		return "INT64", nil
+	case "bytes":
+		return "BYTES(MAX)", nil
+	case "json":
+		return "JSON", nil
+	case "float64", "double":
+		return "FLOAT64", nil
+	case "bool":
+		return "BOOL", nil
+	case "numeric":
+		return "NUMERIC", nil
+	case "date":
+		return "DATE", nil
+	case "frozen<list<text>>", "frozen<set<text>>", "list<text>", "set<text>", "array<string>", "array[string]":
+		return "ARRAY<STRING(MAX)>", nil // Handle list/set as ARRAY in Spanner
+	case "frozen<list<boolean>", "frozen<set<boolean>>", "list<boolean>", "set<boolean>":
+		return "ARRAY<BOOL>", nil // Handle list/set of booleans
+	case "frozen<list<int>>", "frozen<set<int>>", "list<int>", "set<int>":
+		return "ARRAY<INT64>", nil // Handle list/set of integers
+	case "frozen<list<timestamp>>", "frozen<set<timestamp>>", "list<timestamp>", "set<timestamp>":
+		return "ARRAY<TIMESTAMP>", nil // Handle list/set of timestamps
+	case "map<text, boolean>", "map<text, timestamp>":
+		// Store map as JSON in Spanner
+		return "JSON", nil
+	case "array[string, bool]", "array[string, timestamp]", "array[string, string]":
+		return "JSON", nil
+	default:
+		return "", fmt.Errorf("unsupported Cassandra type: %s", column.SpannerType)
+	}
 }
