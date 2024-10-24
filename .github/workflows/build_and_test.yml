@@ -8,6 +8,33 @@ on:
 
 jobs:
 
+  golangLint:
+    name: Lint Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint --version
+
+      - name: Run Golangci Lint
+        id: lint
+        run: |
+          golangci-lint run --timeout 5m --issues-exit-code 0 --out-format=tab > lint_results_table.md
+          if [ -s lint_results_table.md ]; then
+              echo "Issues found"
+              echo "lint_flag=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "No issues found"
+          fi
+
   build:
     name: build and test
     runs-on: ubuntu-latest
