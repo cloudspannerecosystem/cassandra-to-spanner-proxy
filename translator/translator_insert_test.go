@@ -37,64 +37,64 @@ func TestToSpannerUpsert(t *testing.T) {
 	}
 
 	inputQuery := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000') USING TTL 86400 AND TIMESTAMP 1709037503000000;`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000') USING TTL 86400 AND TIMESTAMP 1709037503000000;`
 
 	inputPreparedQuery := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ? AND TIMESTAMP ?;`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ? AND TIMESTAMP ?;`
 
 	inputQueryTTLFirst := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000') USING TIMESTAMP 1709037503000000 AND TTL 86400;`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000') USING TIMESTAMP 1709037503000000 AND TTL 86400;`
 
 	inputPreparedQueryTTLFirst := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TIMESTAMP ? AND TTL ?;`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TIMESTAMP ? AND TTL ?;`
 
 	inputQueryWithoutTS := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000') USING TTL 86400;`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000') USING TTL 86400;`
 
 	inputPreparedQueryWithoutTS := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?;`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?;`
 
 	inputQueryWithoutTTL := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000') USING TIMESTAMP 1709037503000000;`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000') USING TIMESTAMP 1709037503000000;`
 
 	inputPreparedQueryWithoutTTL := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TIMESTAMP ?;`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TIMESTAMP ?;`
 
 	inputQueryWithoutTSTTL := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000');`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000');`
 
 	inputPreparedQueryWithoutTSTTL := `insert into key_space.test_table
-	( column1, column2, column3, column4, column5, column6, column7, column8, column9)
-	VALUES
-	( ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?);`
 
 	inputQueryWithIfNotExists := `insert into key_space.test_table
-	( column1, column2, column3)
-	VALUES
-	( 'test', '0x0000000000000003', 'true') IF NOT EXISTS;`
+	 ( column1, column2, column3)
+	 VALUES
+	 ( 'test', '0x0000000000000003', 'true') IF NOT EXISTS;`
 
 	inputQueryWithIfNotExistsAndTS := `insert into key_space.test_table
-	( column1, column2, column3)
-	VALUES
-	( 'test', '0x0000000000000003', 'true') IF NOT EXISTS USING TIMESTAMP 123456789;`
+	 ( column1, column2, column3)
+	 VALUES
+	 ( 'test', '0x0000000000000003', 'true') IF NOT EXISTS USING TIMESTAMP 123456789;`
 
 	tsCheck, _ := utilities.FormatTimestamp(1709037503000000)
 
@@ -503,8 +503,10 @@ func TestToSpannerUpsert(t *testing.T) {
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			tr := &Translator{
-				Logger:      tt.fields.Logger,
-				TableConfig: tableConfig,
+				Logger:          tt.fields.Logger,
+				TableConfig:     tableConfig,
+				UseRowTimestamp: true,
+				UseRowTTL:       true,
 			}
 			got, err := tr.ToSpannerUpsert(tt.args.query)
 			if (err != nil) != tt.wantErr {
@@ -538,6 +540,231 @@ func TestToSpannerUpsert(t *testing.T) {
 			if got != nil && !reflect.DeepEqual(got.HasIfNotExists, tt.want.HasIfNotExists) {
 				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.HasIfNotExists, tt.want.HasIfNotExists)
 			}
+		})
+	}
+}
+
+func TestSpannerUpsertWithoutUsingTimestamp(t *testing.T) {
+
+	type fields struct {
+		Logger *zap.Logger
+	}
+	type args struct {
+		query string
+	}
+
+	inputPreparedQueryWithoutTS := `insert into key_space.test_table
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?;`
+
+	inputQueryWithoutTSTTL := `insert into key_space.test_table
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( 'test', '0x0000000000000003', 'true', '["The Parx Casino Philly Cycling Classic"]', '2015-05-03 13:30:54.234', '123', '{ "Rabobank-Liv Woman Cycling Team","Rabobank-Liv Giant","Rabobank Women Team","Nederland bloeit" }', '{i3=true, 5023.0=true}', '-10000000');`
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *InsertQueryMap
+		wantErr bool
+	}{
+		{
+			name: "test for prepared query Without TS with TTL",
+			args: args{
+				query: inputPreparedQueryWithoutTS,
+			},
+			want: &InsertQueryMap{
+				CassandraQuery: inputPreparedQueryWithoutTS,
+				QueryType:      "insert",
+				Keyspace:       "key_space",
+				SpannerQuery:   "INSERT OR UPDATE INTO test_table (`column1`, `column2`, `column3`, `column4`, `column5`, `column6`, `column7`, `column8`, `column9`, `spanner_ttl_ts`) VALUES (@column1, @column2, @column3, @column4, @column5, @column6, @column7, @column8, @column9, @spanner_ttl_ts);",
+				Table:          "test_table",
+				ParamKeys:      []string{"column1", "column2", "column3", "column4", "column5", "column6", "column7", "column8", "column9", "spanner_ttl_ts"},
+				UsingTSCheck:   "",
+			},
+			wantErr: false,
+		},
+		{
+			name: "test for raw query without Using TS/TTL",
+			args: args{
+				query: inputQueryWithoutTSTTL,
+			},
+			want: &InsertQueryMap{
+				CassandraQuery: inputQueryWithoutTSTTL,
+				QueryType:      "insert",
+				SpannerQuery:   "INSERT OR UPDATE INTO test_table (`column1`, `column2`, `column3`, `column4`, `column5`, `column6`, `column7`, `column8`, `column9`) VALUES (@column1, @column2, @column3, @column4, @column5, @column6, @column7, @column8, @column9);",
+				Table:          "test_table",
+				Keyspace:       "key_space",
+				Params: map[string]interface{}{
+					"column1": "test",
+					"column2": []byte(string("0x0000000000000003")),
+					"column3": true,
+					"column4": []string{"The Parx Casino Philly Cycling Classic"},
+					"column5": "2015-05-03 13:30:54.234",
+					"column6": 123,
+					"column7": []string{"Rabobank-Liv Woman Cycling Team", "Rabobank-Liv Giant", "Rabobank Women Team", "Nederland bloeit"},
+					"column8": spanner.NullJSON{Value: map[string]interface{}{
+						"i3":     true,
+						"5023.0": true,
+					}, Valid: true},
+					"column9": -10000000,
+				},
+				ParamKeys: []string{"column1", "column2", "column3", "column4", "column5", "column6", "column7", "column8", "column9"},
+				Values: []interface{}{
+					"test",
+					[]byte(string("0x0000000000000003")),
+					true,
+					[]string{"The Parx Casino Philly Cycling Classic"},
+					"2015-05-03 13:30:54.234",
+					123,
+					[]string{"Rabobank-Liv Woman Cycling Team", "Rabobank-Liv Giant", "Rabobank Women Team", "Nederland bloeit"},
+					spanner.NullJSON{Value: map[string]interface{}{
+						"i3":     true,
+						"5023.0": true,
+					}, Valid: true},
+					-10000000,
+				},
+				UsingTSCheck: "",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tableConfig := &tableConfig.TableConfig{
+			Logger:          tt.fields.Logger,
+			TablesMetaData:  mockTableConfig,
+			PkMetadataCache: mockPkMetadata,
+		}
+		t.Run(tt.name, func(t *testing.T) {
+			tr := &Translator{
+				Logger:          tt.fields.Logger,
+				TableConfig:     tableConfig,
+				UseRowTimestamp: false,
+				UseRowTTL:       true,
+			}
+			got, err := tr.ToSpannerUpsert(tt.args.query)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Translator.ToSpannerUpsert() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != nil && !reflect.DeepEqual(got.SpannerQuery, tt.want.SpannerQuery) {
+				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.SpannerQuery, tt.want.SpannerQuery)
+			}
+
+			if got != nil && len(got.Params) > 0 && !reflect.DeepEqual(got.Params, tt.want.Params) {
+				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.Params, tt.want.Params)
+			}
+
+			if got != nil && len(got.ParamKeys) > 0 && !reflect.DeepEqual(got.ParamKeys, tt.want.ParamKeys) {
+				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.ParamKeys, tt.want.ParamKeys)
+			}
+
+			if got != nil && len(got.Values) > 0 && !reflect.DeepEqual(got.Values, tt.want.Values) {
+				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.Values, tt.want.Values)
+			}
+
+			if got != nil && !reflect.DeepEqual(got.UsingTSCheck, tt.want.UsingTSCheck) {
+				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.UsingTSCheck, tt.want.UsingTSCheck)
+			}
+
+			if got != nil && !reflect.DeepEqual(got.Keyspace, tt.want.Keyspace) {
+				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.Keyspace, tt.want.Keyspace)
+			}
+
+			if got != nil && !reflect.DeepEqual(got.HasIfNotExists, tt.want.HasIfNotExists) {
+				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.HasIfNotExists, tt.want.HasIfNotExists)
+			}
+		})
+	}
+}
+
+func TestSpannerUpsertWhenUsingTSTTLIsDisabled(t *testing.T) {
+
+	type fields struct {
+		Logger *zap.Logger
+	}
+	type args struct {
+		query string
+	}
+
+	inputPreparedQueryWithTTL := `insert into key_space.test_table
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TTL ?;`
+
+	inputPreparedQueryWithTS := `insert into key_space.test_table
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?) USING TIMESTAMP ?;`
+
+	inputPreparedQueryWithoutTSAndTTL := `insert into key_space.test_table
+	 ( column1, column2, column3, column4, column5, column6, column7, column8, column9)
+	 VALUES
+	 ( ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *InsertQueryMap
+		wantErr bool
+	}{
+		{
+			name: "test for prepared query With Using TTL",
+			args: args{
+				query: inputPreparedQueryWithTTL,
+			},
+			wantErr: true,
+		},
+		{
+			name: "test for prepared query with Using TS",
+			args: args{
+				query: inputPreparedQueryWithTS,
+			},
+			wantErr: true,
+		},
+		{
+			name: "test for prepared query Without TS & TTL",
+			args: args{
+				query: inputPreparedQueryWithoutTSAndTTL,
+			},
+			want: &InsertQueryMap{
+				CassandraQuery: inputPreparedQueryWithoutTSAndTTL,
+				QueryType:      "insert",
+				Keyspace:       "key_space",
+				SpannerQuery:   "INSERT OR UPDATE INTO test_table (`column1`, `column2`, `column3`, `column4`, `column5`, `column6`, `column7`, `column8`, `column9`) VALUES (@column1, @column2, @column3, @column4, @column5, @column6, @column7, @column8, @column9);",
+				Table:          "test_table",
+				ParamKeys:      []string{"column1", "column2", "column3", "column4", "column5", "column6", "column7", "column8", "column9"},
+				UsingTSCheck:   "",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tableConfig := &tableConfig.TableConfig{
+			Logger:          tt.fields.Logger,
+			TablesMetaData:  mockTableConfig,
+			PkMetadataCache: mockPkMetadata,
+		}
+		t.Run(tt.name, func(t *testing.T) {
+			tr := &Translator{
+				Logger:          tt.fields.Logger,
+				TableConfig:     tableConfig,
+				UseRowTimestamp: false,
+				UseRowTTL:       false,
+			}
+
+			got, err := tr.ToSpannerUpsert(tt.args.query)
+			if (err == nil) == tt.wantErr {
+				t.Errorf("Translator.ToSpannerUpsert() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != nil && !reflect.DeepEqual(got.SpannerQuery, tt.want.SpannerQuery) {
+				t.Errorf("Translator.ToSpannerUpsert() = %v, want %v", got.SpannerQuery, tt.want.SpannerQuery)
+			}
+
 		})
 	}
 }
@@ -715,7 +942,41 @@ func Test_getSpannerInsertQuery(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result, err := getSpannerInsertQuery(test.data)
+			result, err := getSpannerInsertQuery(test.data, true)
+
+			// Validate error
+			if !errorEquals(err, test.expectedErr) {
+				t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
+			}
+
+			// Validate query
+			if result != test.expectedQuery {
+				t.Errorf("Expected query %s, but got %s", test.expectedQuery, result)
+			}
+		})
+	}
+}
+
+func Test_getSpannerInsertQueryWithoutUsingTimestamp(t *testing.T) {
+	tests := []struct {
+		name          string
+		data          *InsertQueryMap
+		expectedQuery string
+		expectedErr   error
+	}{
+		{
+			name: "success",
+			data: &InsertQueryMap{
+				Table:     "testTable",
+				ParamKeys: []string{"column1"},
+			},
+			expectedQuery: "INSERT OR UPDATE INTO testTable (`column1`) VALUES (@column1);",
+			expectedErr:   nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := getSpannerInsertQuery(test.data, false)
 
 			// Validate error
 			if !errorEquals(err, test.expectedErr) {

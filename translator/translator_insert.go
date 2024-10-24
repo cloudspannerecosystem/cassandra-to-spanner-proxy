@@ -248,7 +248,7 @@ func formatTSCheckQuery(primaryCols []string, tableName string) (string, error) 
 //   - data: InsertQueryMap struct
 //
 // Returns: Spanner Insert query and error if any
-func getSpannerInsertQuery(data *InsertQueryMap) (string, error) {
+func getSpannerInsertQuery(data *InsertQueryMap, useRowTimestamp bool) (string, error) {
 	var columnNames []string
 	var valuePlaceholders []string
 
@@ -263,7 +263,7 @@ func getSpannerInsertQuery(data *InsertQueryMap) (string, error) {
 			}
 		}
 
-		if len(data.Values) == 0 && data.UsingTSCheck == "" {
+		if len(data.Values) == 0 && data.UsingTSCheck == "" && useRowTimestamp {
 			columnNames = append(columnNames, "`"+spannerTSColumn+"`")
 			valuePlaceholders = append(valuePlaceholders, commitTsFn)
 		}
@@ -351,11 +351,18 @@ func (t *Translator) ToSpannerUpsert(queryStr string) (*InsertQueryMap, error) {
 	hasUsingTimestamp := hasUsingTimestamp(lowerQuery)
 	hasIfNotExists := hasIfNotExists(lowerQuery)
 
+	if hasUsingTimestamp && !t.UseRowTimestamp {
+		return nil, errors.New("'USING TIMESTAMP' is not enabled. Set 'useRowTimestamp' to true in config.yaml")
+	}
+
 	if hasIfNotExists && hasUsingTimestamp {
 		return nil, errors.New("INSERT does not support IF NOT EXISTS and USING TIMESTAMP in the same statement")
 	}
 
 	hasUsingTtl := hasUsingTtl(lowerQuery)
+	if hasUsingTtl && !t.UseRowTTL {
+		return nil, errors.New("'USING TTL' is not enabled. Set 'useRowTTL' to true in config.yaml")
+	}
 	if hasUsingTimestamp || hasUsingTtl {
 
 		ttlTsSpec := insertObj.UsingTtlTimestamp()
@@ -458,7 +465,7 @@ func (t *Translator) ToSpannerUpsert(queryStr string) (*InsertQueryMap, error) {
 				}
 			}
 		}
-	} else {
+	} else if t.UseRowTimestamp {
 		if len(values) > 0 {
 			columnsResponse.ParamKeys = append(columnsResponse.ParamKeys, spannerTSColumn)
 			values = append(values, spanner.CommitTimestamp)
@@ -485,7 +492,7 @@ func (t *Translator) ToSpannerUpsert(queryStr string) (*InsertQueryMap, error) {
 		PrimaryKeys:    primaryKeys,
 	}
 
-	spannerQuery, err := getSpannerInsertQuery(insertQueryData)
+	spannerQuery, err := getSpannerInsertQuery(insertQueryData, t.UseRowTimestamp)
 	if err != nil {
 		return nil, err
 	}

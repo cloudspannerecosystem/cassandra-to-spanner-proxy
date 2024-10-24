@@ -224,8 +224,10 @@ func TestTranslator_ToSpannerUpdate(t *testing.T) {
 			}
 
 			tr := &Translator{
-				Logger:      tt.fields.Logger,
-				TableConfig: tableConfig,
+				Logger:          tt.fields.Logger,
+				TableConfig:     tableConfig,
+				UseRowTimestamp: true,
+				UseRowTTL:       true,
 			}
 			got, err := tr.ToSpannerUpdate(tt.args.query)
 			if (err != nil) != tt.wantErr {
@@ -252,6 +254,68 @@ func TestTranslator_ToSpannerUpdate(t *testing.T) {
 	}
 }
 
+func TestTranslator_ToSpannerUpdateWhenUsingTSTTLIsDisabled(t *testing.T) {
+	timeStamp, _ := utilities.FormatTimestamp(1709052458000212)
+
+	type fields struct {
+		Logger *zap.Logger
+	}
+	type args struct {
+		query string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *UpdateQueryMap
+		wantErr bool
+	}{
+		{
+			name: "update success with raw query Without TS & TTL",
+			args: args{
+				query: "UPDATE key_space.test_table SET column1 = 'testText' , column2 = '0x0000000000000003' WHERE column3='true';",
+			},
+			wantErr: false,
+			want: &UpdateQueryMap{
+				SpannerQuery: "UPDATE test_table SET `column1` = @set1 , `column2` = @set2 WHERE `column3` = @value1;",
+				ParamKeys:    []string{"ttlValue", "tsValue", "set1", "set2", "value1"},
+				Params: map[string]interface{}{
+					"ttlValue": utilities.AddSecondsToCurrentTimestamp(84600),
+					"tsValue":  timeStamp,
+					"set1":     "testText",
+					"set2":     []byte(string("0x0000000000000003")),
+					"value1":   true,
+				},
+				Keyspace: "key_space",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tableConfig := &tableConfig.TableConfig{
+				Logger:          tt.fields.Logger,
+				TablesMetaData:  mockTableConfig,
+				PkMetadataCache: mockPkMetadata,
+			}
+
+			tr := &Translator{
+				Logger:          tt.fields.Logger,
+				TableConfig:     tableConfig,
+				UseRowTimestamp: false,
+				UseRowTTL:       false,
+			}
+			got, err := tr.ToSpannerUpdate(tt.args.query)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Translator.ToSpannerUpdate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != nil && !reflect.DeepEqual(got.SpannerQuery, tt.want.SpannerQuery) {
+				t.Errorf("Translator.ToSpannerUpdate() = %v, want %v", got.SpannerQuery, tt.want.SpannerQuery)
+			}
+
+		})
+	}
+}
 func TestParseAssignments(t *testing.T) {
 	// Mock table configuration
 

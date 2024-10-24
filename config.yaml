@@ -23,6 +23,16 @@ cassandra_to_spanner_configs:
   # as-is. Default to False
   keyspaceFlatter: True
 
+  # useRowTTL: If set to True, the "spanner_ttl_ts" column will be included in all queries
+  # (insert, select, update). If set to False, the "spanner_ttl_ts" column will be ignored
+  # and excluded from all query types. Default is False.
+  useRowTTL: True
+
+  # useRowTimestamp: If set to True, the "last_commit_ts" column will be included in
+  # all queries (insert, select, update). If set to False, the "last_commit_ts" column
+  # will be excluded from all query types. Default is False.
+  useRowTimestamp: True
+
 listeners:
   - name: YOUR_CLUSTER_NAME
     port: PORT

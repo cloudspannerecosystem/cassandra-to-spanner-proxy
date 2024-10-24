@@ -139,6 +139,8 @@ type Config struct {
 	// capacity of ~100MB.
 	PreparedCache   proxycore.PreparedCache
 	KeyspaceFlatter bool
+	UseRowTimestamp bool
+	UseRowTTL       bool
 	Debug           bool
 	UserAgent       string
 }
@@ -285,6 +287,8 @@ func NewProxy(ctx context.Context, config Config) (*Proxy, error) {
 		Logger:          config.Logger,
 		TableConfig:     tableConfigurations,
 		KeyspaceFlatter: config.KeyspaceFlatter,
+		UseRowTimestamp: config.UseRowTimestamp,
+		UseRowTTL:       config.UseRowTTL,
 		Debug:           config.Debug,
 	}
 
@@ -1380,7 +1384,7 @@ func (c *client) prepareInsertQueryMetadata(raw *frame.RawFrame, paramValue []*p
 		params[st.ParamKeys[index]] = decodedValue
 	}
 
-	if st.UsingTSCheck == "" {
+	if st.UsingTSCheck == "" && c.proxy.translator.UseRowTimestamp {
 		paramValues = append(paramValues, spanner.CommitTimestamp)
 		paramKeys = append(paramKeys, ts_column)
 	}

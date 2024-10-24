@@ -326,7 +326,7 @@ func (t *Translator) ToSpannerUpdate(queryStr string) (*UpdateQueryMap, error) {
 		setValues.ParamKeys = newParamKeys
 		setValues.UpdateSetValues = newSet
 
-	} else {
+	} else if t.UseRowTimestamp {
 		setValues.UpdateSetValues = append(setValues.UpdateSetValues, UpdateSetValue{
 			Column: spannerTSColumn,
 			Value:  commitTsFn,
