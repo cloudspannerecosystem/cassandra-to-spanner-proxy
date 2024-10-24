@@ -256,6 +256,14 @@ func Test_formatValues(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name:        "String type with null value",
+			value:       "null",
+			spannerType: "string",
+			cqlType:     "",
+			expected:    nil,
+			expectedErr: nil,
+		},
+		{
 			name:        "Bytes type",
 			value:       "hello",
 			spannerType: "bytes",
@@ -277,6 +285,22 @@ func Test_formatValues(t *testing.T) {
 			spannerType: "int64",
 			cqlType:     "",
 			expected:    123,
+			expectedErr: nil,
+		},
+		{
+			name:        "Int64 type with null value",
+			value:       "NULL",
+			spannerType: "int64",
+			cqlType:     "",
+			expected:    nil,
+			expectedErr: nil,
+		},
+		{
+			name:        "Timestamp type with null value",
+			value:       "null",
+			spannerType: "TIMESTAMP",
+			cqlType:     "",
+			expected:    nil,
 			expectedErr: nil,
 		},
 		{
