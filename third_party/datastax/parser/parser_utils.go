@@ -17,6 +17,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/message"
@@ -215,4 +216,36 @@ func IsQueryHandledWithQueryType(keyspace Identifier, query string) (handled boo
 	}
 	return false, nil, "", nil
 
+}
+
+// IsQueryCreateTableType checks whether the given CQL query string is a CREATE TABLE query type.
+// It converts the query to lowercase to ensure it matches tokens case-insensitively before parsing.
+//
+// Parameters:
+// - query: A string representing the CQL query to be analyzed.
+//
+// Returns:
+// - A boolean value: true if the query is a "CREATE TABLE" type, false otherwise.
+func IsQueryCreateTableType(query string) bool {
+	// Convert the query to lowercase to handle CQL keywords regardless of their case.
+	lowerQuery := strings.ToLower(query)
+
+	// Initialize a CQL-specific lexer with the lowercase query string.
+	// This lexer will tokenize the query for further analysis.
+	var l lexer
+	l.init(lowerQuery)
+
+	// Retrieve the first token from the lexer, which should represent the first keyword in the query.
+	t := l.next()
+
+	// Check if the first token is the 'CREATE' keyword.
+	switch t {
+	case tkCreate:
+		// If 'CREATE' is found, return true, indicating the query could be creating a table.
+		// Note: This does not verify subsequent tokens (e.g., 'TABLE') are present.
+		return true
+	default:
+		// If any other token is found as the first token, return false, indicating the query is not for table creation.
+		return false
+	}
 }

@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 )
 
 const (
@@ -164,16 +164,18 @@ func GetSpannerColumnType(cqlType string) string {
 		return "bool"
 	case "list<text>", "set<text>", "frozen<list<text>>", "frozen<set<text>>":
 		return arrayOfString
-	case "map<text, boolean>":
+	case "map<text, boolean>", "map<text,boolean>":
 		return "array[string, bool]"
 	case "float":
 		return "float64"
 	case "uuid":
 		return "string"
-	case "map<text, text>":
+	case "map<text, text>", "map<text,text>":
 		return "array[string, string]"
-	case "map<text, timestamp>":
+	case "map<text, timestamp>", "map<text,timestamp>":
 		return "array[string, timestamp]"
+	case "double":
+		return "float64"
 	// Future scope - Below datatypes are currently not supported. To be added in future.
 	// case "map<text, int>":
 	// 	return "string"
