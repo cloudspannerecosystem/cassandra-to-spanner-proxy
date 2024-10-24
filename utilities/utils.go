@@ -166,9 +166,7 @@ func GetSpannerColumnType(cqlType string) string {
 		return arrayOfString
 	case "map<text, boolean>":
 		return "array[string, bool]"
-	case "float":
-		return "float64"
-	case "double":
+	case "float", "double":
 		return "float64"
 	case "uuid":
 		return "string"
