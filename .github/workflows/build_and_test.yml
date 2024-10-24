@@ -51,7 +51,6 @@ jobs:
 
     - name: Test
       run: |
-            go mod tidy
             go test ./{/otel,/third_party/datastax/proxycore,/responsehandler,/spanner,/tableConfig,/tableConfig,/translator,/utilities,/third_party/datastax/proxy} -coverprofile=cover.out | tee -a ${GITHUB_WORKSPACE}/unit_test_result.txt ; (exit ${PIPESTATUS[0]})
             go tool cover -func cover.out | grep total: >> ${GITHUB_WORKSPACE}/unit_test_result.txt
 
