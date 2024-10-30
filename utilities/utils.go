@@ -175,8 +175,6 @@ func GetSpannerColumnType(cqlType string) string {
 		return "array[string, string]"
 	case "map<text, timestamp>", "map<text,timestamp>":
 		return "array[string, timestamp]"
-	case "double":
-		return "float64"
 	// Future scope - Below datatypes are currently not supported. To be added in future.
 	// case "map<text, int>":
 	// 	return "string"
