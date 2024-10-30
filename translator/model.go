@@ -71,6 +71,7 @@ type Column struct {
 	Name        string
 	SpannerType string
 	CQLType     string
+	ElementType string
 }
 
 type Clause struct {
@@ -165,4 +166,17 @@ type UpdateSetResponse struct {
 type TableObj struct {
 	TableName    string
 	KeyspaceName string
+}
+
+// CreatetableQueryMap represents the mapping of an create query along with its translation details.
+type CreatetableQueryMap struct {
+	CassandraQuery     string   // Original query string
+	SpannerQuery       string   // Translated query string suitable for Spanner
+	Table              string   // Table involved in the query
+	Keyspace           string   // Keyspace to which the table belongs
+	KeySpaceFlattening bool     // Boolean value to flatten the table name or not
+	Columns            []Column // List of columns involved in the insert operation
+	HasIfNotExists     bool     // Condition for IF NOT EXISTS checks
+	PrimaryKeys        []string // Primary keys of the table
+	TTLValue           int64    //timestamp
 }

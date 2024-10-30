@@ -164,16 +164,16 @@ func GetSpannerColumnType(cqlType string) string {
 		return "bool"
 	case "list<text>", "set<text>", "frozen<list<text>>", "frozen<set<text>>":
 		return arrayOfString
-	case "map<text, boolean>":
+	case "map<text, boolean>", "map<text,boolean>":
 		return "array[string, bool]"
 	case "float", "double":
 		// TODO: float in Cassandra should map to float32 in Spanner.
 		return "float64"
 	case "uuid":
 		return "string"
-	case "map<text, text>":
+	case "map<text, text>", "map<text,text>":
 		return "array[string, string]"
-	case "map<text, timestamp>":
+	case "map<text, timestamp>", "map<text,timestamp>":
 		return "array[string, timestamp]"
 	// Future scope - Below datatypes are currently not supported. To be added in future.
 	// case "map<text, int>":
