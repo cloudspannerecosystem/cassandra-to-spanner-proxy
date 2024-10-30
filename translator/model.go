@@ -17,8 +17,8 @@
 package translator
 
 import (
-	"github.com/datastax/go-cassandra-native-protocol/message"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
+	"github.com/datastax/go-cassandra-native-protocol/message"
 	"go.uber.org/zap"
 )
 
@@ -26,6 +26,8 @@ type Translator struct {
 	Logger          *zap.Logger
 	TableConfig     *tableConfig.TableConfig
 	KeyspaceFlatter bool
+	UseRowTimestamp bool
+	UseRowTTL       bool
 	Debug           bool
 }
 

@@ -207,7 +207,12 @@ func (t *Translator) ToSpannerUpdate(queryStr string) (*UpdateQueryMap, error) {
 
 	ttlTimestampObj := updateObj.UsingTtlTimestamp()
 
-	if ttlTimestampObj != nil && hasUsingTtl(lowerQuery) {
+	hasUsingTtl := hasUsingTtl(lowerQuery)
+	if hasUsingTtl && !t.UseRowTTL {
+		return nil, errors.New("'USING TTL' is not enabled. Set 'useRowTTL' to true in config.yaml")
+	}
+
+	if ttlTimestampObj != nil && hasUsingTtl {
 
 		ttlValue, err = getTTLValue(ttlTimestampObj)
 
@@ -226,7 +231,12 @@ func (t *Translator) ToSpannerUpdate(queryStr string) (*UpdateQueryMap, error) {
 
 	}
 
-	if ttlTimestampObj != nil && hasUsingTimestamp(lowerQuery) {
+	hasUsingTimestamp := hasUsingTimestamp(lowerQuery)
+	if hasUsingTimestamp && !t.UseRowTimestamp {
+		return nil, errors.New("'USING TIMESTAMP' is not enabled. Set 'useRowTimestamp' to true in config.yaml")
+	}
+
+	if ttlTimestampObj != nil && hasUsingTimestamp {
 		tsValue, err = getTimestampValue(updateObj.UsingTtlTimestamp())
 		if err != nil {
 			return nil, err
@@ -303,10 +313,12 @@ func (t *Translator) ToSpannerUpdate(queryStr string) (*UpdateQueryMap, error) {
 				Value:  "@" + ttlValuePlaceholder,
 			})
 
-			newSet = append(newSet, UpdateSetValue{
-				Column: spannerTSColumn,
-				Value:  commitTsFn,
-			})
+			if t.UseRowTimestamp {
+				newSet = append(newSet, UpdateSetValue{
+					Column: spannerTSColumn,
+					Value:  commitTsFn,
+				})
+			}
 
 			if ttlValue != questionMark {
 				setValues.Params[ttlValuePlaceholder] = ttlValue
@@ -326,7 +338,7 @@ func (t *Translator) ToSpannerUpdate(queryStr string) (*UpdateQueryMap, error) {
 		setValues.ParamKeys = newParamKeys
 		setValues.UpdateSetValues = newSet
 
-	} else {
+	} else if t.UseRowTimestamp {
 		setValues.UpdateSetValues = append(setValues.UpdateSetValues, UpdateSetValue{
 			Column: spannerTSColumn,
 			Value:  commitTsFn,

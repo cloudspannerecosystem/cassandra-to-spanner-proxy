@@ -21,9 +21,9 @@ import (
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
 	cql "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator/cqlparser"
+	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"go.uber.org/zap"
 )
 
@@ -507,8 +507,9 @@ func TestTranslator_ToSpannerSelect(t *testing.T) {
 				PkMetadataCache: mockPkMetadata,
 			}
 			tr := &Translator{
-				Logger:      tt.fields.Logger,
-				TableConfig: tableConfig,
+				Logger:          tt.fields.Logger,
+				TableConfig:     tableConfig,
+				UseRowTimestamp: false,
 			}
 			got, err := tr.ToSpannerSelect(tt.args.query)
 			if (err != nil) != tt.wantErr {
@@ -549,8 +550,10 @@ func Test_getSpannerSelectQuery(t *testing.T) {
 		PkMetadataCache: mockPkMetadata,
 	}
 	tr := &Translator{
-		Logger:      zap.NewNop(),
-		TableConfig: tableConfig,
+		Logger:          zap.NewNop(),
+		TableConfig:     tableConfig,
+		UseRowTimestamp: true,
+		UseRowTTL:       true,
 	}
 
 	type args struct {
