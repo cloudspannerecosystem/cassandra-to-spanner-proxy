@@ -88,7 +88,7 @@ In this mode, keyspaces are preserved in the schema.
 
 - The script **does not drop** tables before creating them. Ensure the schema is adjusted accordingly if needed.
 - The `TableConfigurations` table is created to track schema metadata.
-- The script supports the same data types as the proxy adaptor, as mentioned in the [FAQs](https://github.com/ollionorg/cassandra-to-spanner-proxy/blob/develop/docs/faq.md#how-are-cql-data-types-mapped-with-cloud-spanner).
+- The script supports the same data types as the proxy adaptor, as mentioned in the [FAQs](https://github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/blob/develop/docs/faq.md#how-are-cql-data-types-mapped-with-cloud-spanner).
 
 ### Expected Output
 
