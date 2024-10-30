@@ -2,9 +2,17 @@ name: CICD
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+
   pull_request:
-    branches: [ "main" ]
+    types:
+      - opened
+      - edited
+      - closed
+      - synchronize
+    branches:
+      - main
 
 jobs:
 
@@ -51,3 +59,12 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Run integration test cases
+      id: integration_test
+      env:
+        INTEGRATION_TEST_CRED_PATH: ${{ secrets.INTEGRATION_TEST_CRED_PATH }}
+      run: |
+          go test integration_test.go -args -target=proxy
+          go test integration_test.go -args -target=cassandra
+  
