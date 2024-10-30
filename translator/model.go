@@ -26,6 +26,8 @@ type Translator struct {
 	Logger          *zap.Logger
 	TableConfig     *tableConfig.TableConfig
 	KeyspaceFlatter bool
+	UseRowTimestamp bool
+	UseRowTTL       bool
 	Debug           bool
 }
 

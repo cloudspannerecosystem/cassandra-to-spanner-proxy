@@ -22,13 +22,15 @@ import (
 	"strings"
 
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
 	cql "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator/cqlparser"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
+	"github.com/datastax/go-cassandra-native-protocol/datatype"
 )
 
 const excludeInternalColumns = " EXCEPT (`" + spannerTSColumn + "`, `" + spannerTTLColumn + "`)"
+const includeTSColumn = " EXCEPT (`" + spannerTSColumn + "`)"
+const includeTTLColumn = " EXCEPT (`" + spannerTTLColumn + "`)"
 
 // parseColumnsFromSelect parse Columns from the Select Query
 //
@@ -323,7 +325,13 @@ func getSpannerSelectQuery(t *Translator, data *SelectQueryMap) (string, error) 
 	if data.ColumnMeta.Star {
 		column = STAR
 		// TODO: Instead of exclude keyword, flattern list of all columns from TableConfigurations.
-		column += excludeInternalColumns
+		if t.UseRowTimestamp && t.UseRowTTL {
+			column += excludeInternalColumns
+		} else if t.UseRowTimestamp {
+			column += includeTSColumn
+		} else if t.UseRowTTL {
+			column += includeTTLColumn
+		}
 	} else {
 		aliasMap, columns, err = processStrings(t, data.ColumnMeta.Column, data.Table)
 		if err != nil {
