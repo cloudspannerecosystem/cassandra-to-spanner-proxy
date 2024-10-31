@@ -2,7 +2,7 @@
 
 ## Current Released  Version
 
-Version `1.0.0`
+Version `1.0.1`
 
 ## Introduction
 Cassandra to Cloud Spanner Proxy Adapter is designed to forward your application's CQL traffic to Spanner database service. It listens on a local address and securely forwards that traffic.
