@@ -1918,8 +1918,6 @@ func (sc *SpannerClient) GetClient(ctx context.Context) (*spanner.Client, error)
 
 // NewSpannerClient creates a new instance of SpannerClient
 var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenTelemetry) iface.SpannerClientInterface {
-	// Enable multiplexed sessions
-	os.Setenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS", "true")
 	// Enable direct access
 	os.Setenv("GOOGLE_SPANNER_ENABLE_DIRECT_ACCESS", "true")
 	// Implementation
