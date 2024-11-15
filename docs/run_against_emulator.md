@@ -26,7 +26,7 @@
     gcloud config set account emulator-account
     gcloud config set project emulator-project
     gcloud config set api_endpoint_overrides/spanner http://localhost:9020/ 
-    gcloud config set instance test-instance
+    gcloud config set spanner/instance test-instance
     ```
 5. Create a test database to be use:
     ```
