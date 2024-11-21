@@ -42,12 +42,19 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: '1.21'
 
     - name: Build
       run: go build -v ./...
+    
+    - name: Run Third Party Unit Tests
+      run: |
+          go mod tidy 
+          go test -v ./{/third_party/datastax/proxycore,/third_party/datastax/proxy} 
 
-    - name: Test
-      run: go test -v ./...
+    - name: Run Unit Tests
+      run: |
+          go mod tidy
+          go test -v ./{/otel,/spanner,/tableConfig,/tableConfig,/translator,/utilities} 

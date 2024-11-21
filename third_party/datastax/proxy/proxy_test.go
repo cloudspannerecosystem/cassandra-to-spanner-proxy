@@ -36,14 +36,16 @@ import (
 	message "github.com/datastax/go-cassandra-native-protocol/message"
 
 	"cloud.google.com/go/spanner"
-	"github.com/datastax/go-cassandra-native-protocol/datatype"
-	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	otelMock "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/mocks/otel"
 	proxyIfaceMock "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/mocks/proxy/iface"
 	spannerMock "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/mocks/spanner"
+	otelgo "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/otel"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/parser"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxy/iface"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
+	"github.com/datastax/go-cassandra-native-protocol/datatype"
+	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	// "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxy"
@@ -93,6 +95,7 @@ func generateTestAddrs(host string) (clusterPort int, clusterAddr, proxyAddr, ht
 }
 
 func TestNewProxyWithOtel(t *testing.T) {
+	// t.Skip("Skipping for now due to seg fault in CI/CD")
 	ctx := context.Background()
 
 	// Initialize a logger
@@ -101,6 +104,11 @@ func TestNewProxyWithOtel(t *testing.T) {
 	// Mock for SpannerClientInterface
 	mockSpannerClient := new(proxyIfaceMock.SpannerClientInterface)
 	mockSpannerClient.On("GetClient", ctx).Return(&spanner.Client{}, nil)
+	originalNewProxySpannerClient := NewSpannerClient
+	NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenTelemetry) iface.SpannerClientInterface {
+		return mockSpannerClient
+	}
+	defer func() { NewSpannerClient = originalNewProxySpannerClient }()
 
 	// Initialize the columnMap and columnListMap
 	columnMap := make(map[string]map[string]*tableConfig.Column)
@@ -248,8 +256,10 @@ func Test_Serve(t *testing.T) {
 	prox.isConnected = true
 	go func() {
 		time.Sleep(5 * time.Second)
+		prox.mu.Lock()
 		prox.isClosing = true
 		httpListener.Close()
+		prox.mu.Unlock()
 	}()
 	err = prox.Serve(httpListener)
 	assert.Errorf(t, err, "error expected")
@@ -548,6 +558,11 @@ func Test_client_prepareInsertType(t *testing.T) {
 	// Mock for SpannerClientInterface
 	mockSpannerClient := new(proxyIfaceMock.SpannerClientInterface)
 	mockSpannerClient.On("GetClient", ctx).Return(&spanner.Client{}, nil)
+	originalNewProxySpannerClient := NewSpannerClient
+	NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenTelemetry) iface.SpannerClientInterface {
+		return mockSpannerClient
+	}
+	defer func() { NewSpannerClient = originalNewProxySpannerClient }()
 
 	// Initialize the columnMap and columnListMap
 	columnMap := make(map[string]map[string]*tableConfig.Column)
@@ -760,6 +775,11 @@ func Test_client_prepareUpdateType(t *testing.T) {
 	// Mock for SpannerClientInterface
 	mockSpannerClient := new(proxyIfaceMock.SpannerClientInterface)
 	mockSpannerClient.On("GetClient", ctx).Return(&spanner.Client{}, nil)
+	originalNewProxySpannerClient := NewSpannerClient
+	NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenTelemetry) iface.SpannerClientInterface {
+		return mockSpannerClient
+	}
+	defer func() { NewSpannerClient = originalNewProxySpannerClient }()
 
 	// Initialize the columnMap and columnListMap
 	columnMap := make(map[string]map[string]*tableConfig.Column)
@@ -1244,6 +1264,11 @@ func Test_handleExecutionForDeletePreparedQuery(t *testing.T) {
 	// Mock for SpannerClientInterface
 	mockSpannerClient := new(proxyIfaceMock.SpannerClientInterface)
 	mockSpannerClient.On("GetClient", ctx).Return(&spanner.Client{}, nil)
+	originalNewProxySpannerClient := NewSpannerClient
+	NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenTelemetry) iface.SpannerClientInterface {
+		return mockSpannerClient
+	}
+	defer func() { NewSpannerClient = originalNewProxySpannerClient }()
 
 	// Initialize the columnMap and columnListMap
 	columnMap := make(map[string]map[string]*tableConfig.Column)
@@ -2867,6 +2892,11 @@ func newProxy(cfg *Config) (*Proxy, error) {
 	// Mock for SpannerClientInterface
 	mockSpannerClient := new(proxyIfaceMock.SpannerClientInterface)
 	mockSpannerClient.On("GetClient", ctx).Return(&spanner.Client{}, nil)
+	originalNewProxySpannerClient := NewSpannerClient
+	NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenTelemetry) iface.SpannerClientInterface {
+		return mockSpannerClient
+	}
+	defer func() { NewSpannerClient = originalNewProxySpannerClient }()
 
 	// Initialize the columnMap and columnListMap
 	columnMap := make(map[string]map[string]*tableConfig.Column)
