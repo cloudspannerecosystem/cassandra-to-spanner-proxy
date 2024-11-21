@@ -95,7 +95,6 @@ func generateTestAddrs(host string) (clusterPort int, clusterAddr, proxyAddr, ht
 }
 
 func TestNewProxyWithOtel(t *testing.T) {
-	// t.Skip("Skipping for now due to seg fault in CI/CD")
 	ctx := context.Background()
 
 	// Initialize a logger
