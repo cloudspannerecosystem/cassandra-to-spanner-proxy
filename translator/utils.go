@@ -691,3 +691,12 @@ func spannerDDLType(column Column) (string, error) {
 		return "", fmt.Errorf("unsupported Cassandra type: %s", column.SpannerType)
 	}
 }
+
+func RemoveQuotesFromKeyspace(id string) string {
+	l := len(id)
+	if l > 0 && id[0] == '"' {
+		return id[1 : l-1]
+	} else {
+		return id
+	}
+}

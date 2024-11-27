@@ -158,7 +158,7 @@ func createSpannerSelectQueryForMapUpdate(table string, columns string, clauses 
 //   - query: CQL Update query
 //
 // Returns: UpdateQueryMap struct and error if any
-func (t *Translator) ToSpannerUpdate(queryStr string) (*UpdateQueryMap, error) {
+func (t *Translator) ToSpannerUpdate(keyspace string, queryStr string) (*UpdateQueryMap, error) {
 	lowerQuery := strings.ToLower(queryStr)
 	query := renameLiterals(queryStr)
 	p, err := NewCqlParser(query, t.Debug)
@@ -177,21 +177,25 @@ func (t *Translator) ToSpannerUpdate(queryStr string) (*UpdateQueryMap, error) {
 	}
 
 	queryType := kwUpdateObj.GetText()
-
-	keyspace := updateObj.Keyspace()
 	updateObj.DOT()
 
 	table := updateObj.Table()
-
-	if table == nil || keyspace == nil {
-		return nil, errors.New("invalid input parameter found for table or keyspace")
+	if table == nil {
+		return nil, errors.New("invalid input parameter found for table")
 	}
 
-	keyspaceObj := keyspace.OBJECT_NAME()
-	if keyspaceObj == nil {
+	var keyspaceName string
+	if updateObj.Keyspace() != nil {
+		keyspaceObj := updateObj.Keyspace().OBJECT_NAME()
+		if keyspaceObj == nil {
+			return nil, errors.New("invalid input parameter found for keyspace")
+		}
+		keyspaceName = keyspaceObj.GetText()
+	} else if len(keyspace) != 0 {
+		keyspaceName = RemoveQuotesFromKeyspace(keyspace)
+	} else {
 		return nil, errors.New("invalid input parameter found for keyspace")
 	}
-	keyspaceName := keyspaceObj.GetText()
 
 	tableobj := table.OBJECT_NAME()
 	if tableobj == nil {

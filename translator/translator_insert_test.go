@@ -33,7 +33,8 @@ func TestToSpannerUpsert(t *testing.T) {
 		Logger *zap.Logger
 	}
 	type args struct {
-		query string
+		query    string
+		keyspace string
 	}
 
 	inputQuery := `insert into key_space.test_table
@@ -508,7 +509,7 @@ func TestToSpannerUpsert(t *testing.T) {
 				UseRowTimestamp: true,
 				UseRowTTL:       true,
 			}
-			got, err := tr.ToSpannerUpsert(tt.args.query)
+			got, err := tr.ToSpannerUpsert(tt.args.keyspace, tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerUpsert() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -550,7 +551,8 @@ func TestSpannerUpsertWithoutUsingTimestamp(t *testing.T) {
 		Logger *zap.Logger
 	}
 	type args struct {
-		query string
+		query    string
+		keyspace string
 	}
 
 	inputPreparedQueryWithoutTS := `insert into key_space.test_table
@@ -644,7 +646,7 @@ func TestSpannerUpsertWithoutUsingTimestamp(t *testing.T) {
 				UseRowTimestamp: false,
 				UseRowTTL:       true,
 			}
-			got, err := tr.ToSpannerUpsert(tt.args.query)
+			got, err := tr.ToSpannerUpsert(tt.args.keyspace, tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerUpsert() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -686,7 +688,8 @@ func TestSpannerUpsertWhenUsingTSTTLIsDisabled(t *testing.T) {
 		Logger *zap.Logger
 	}
 	type args struct {
-		query string
+		query     string
+		keysspace string
 	}
 
 	inputPreparedQueryWithTTL := `insert into key_space.test_table
@@ -756,7 +759,7 @@ func TestSpannerUpsertWhenUsingTSTTLIsDisabled(t *testing.T) {
 				UseRowTTL:       false,
 			}
 
-			got, err := tr.ToSpannerUpsert(tt.args.query)
+			got, err := tr.ToSpannerUpsert(tt.args.keysspace, tt.args.query)
 			if (err == nil) == tt.wantErr {
 				t.Errorf("Translator.ToSpannerUpsert() error = %v, wantErr %v", err, tt.wantErr)
 				return

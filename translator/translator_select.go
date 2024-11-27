@@ -114,7 +114,7 @@ func parseColumnsFromSelect(input cql.ISelectElementsContext) (ColumnMeta, error
 //   - input: The From Spec context from the antlr Parser.
 //
 // Returns: Table Name and an error if any.
-func parseTableFromSelect(input cql.IFromSpecContext) (*TableObj, error) {
+func parseTableFromSelect(keyspace string, input cql.IFromSpecContext) (*TableObj, error) {
 	if input == nil {
 		return nil, errors.New("no input parameters found for table and keyspace")
 	}
@@ -139,7 +139,7 @@ func parseTableFromSelect(input cql.IFromSpecContext) (*TableObj, error) {
 		keyspaceObj = fromSpec.OBJECT_NAME(0)
 		tableObj = fromSpec.OBJECT_NAME(1)
 	} else {
-		return nil, errors.New("could not find table or keyspace name")
+		tableObj = fromSpec.OBJECT_NAME(0)
 	}
 
 	if tableObj != nil {
@@ -150,6 +150,8 @@ func parseTableFromSelect(input cql.IFromSpecContext) (*TableObj, error) {
 
 	if keyspaceObj != nil {
 		response.KeyspaceName = strings.ToLower(keyspaceObj.GetText())
+	} else if len(keyspace) != 0 {
+		response.KeyspaceName = RemoveQuotesFromKeyspace(keyspace)
 	} else {
 		return nil, errors.New("could not find keyspace name")
 	}
@@ -373,7 +375,7 @@ func getSpannerSelectQuery(t *Translator, data *SelectQueryMap) (string, error) 
 //   - originalQuery: CQL Select statement
 //
 // Returns: SelectQueryMap struct and error if any
-func (t *Translator) ToSpannerSelect(originalQuery string) (*SelectQueryMap, error) {
+func (t *Translator) ToSpannerSelect(keyspace string, originalQuery string) (*SelectQueryMap, error) {
 	lowerQuery := strings.ToLower(originalQuery)
 	//Create copy of cassandra query where literals are substituted with a suffix
 	query := renameLiterals(originalQuery)
@@ -400,7 +402,7 @@ func (t *Translator) ToSpannerSelect(originalQuery string) (*SelectQueryMap, err
 		return nil, err
 	}
 
-	tableSpec, err := parseTableFromSelect(selectObj.FromSpec())
+	tableSpec, err := parseTableFromSelect(keyspace, selectObj.FromSpec())
 	if err != nil {
 		return nil, err
 	} else if tableSpec.TableName == "" || tableSpec.KeyspaceName == "" {
