@@ -784,7 +784,7 @@ func (c *client) handleServerPreparedQuery(raw *frame.RawFrame, msg *message.Pre
 // function to handle and delete query of prepared type
 func (c *client) prepareDeleteType(raw *frame.RawFrame, msg *message.Prepare, id [16]byte) ([]*message.ColumnMetadata, []*message.ColumnMetadata, error) {
 	var returnColumns, variableColumns, columnsWithInOp []string
-	deleteQueryMetadata, err := c.proxy.translator.ToSpannerDelete(msg.Query)
+	deleteQueryMetadata, err := c.proxy.translator.ToSpannerDelete(c.keyspace, msg.Query)
 	if err != nil {
 		c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.Query), zap.Error(err))
 		c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -841,7 +841,7 @@ func (c *client) prepareDeleteType(raw *frame.RawFrame, msg *message.Prepare, id
 func (c *client) prepareInsertType(raw *frame.RawFrame, msg *message.Prepare, id [16]byte) ([]*message.ColumnMetadata, []*message.ColumnMetadata, error) {
 	var returnColumns []string
 
-	insertQueryMetadata, err := c.proxy.translator.ToSpannerUpsert(msg.Query)
+	insertQueryMetadata, err := c.proxy.translator.ToSpannerUpsert(c.keyspace, msg.Query)
 	if err != nil {
 		c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.Query), zap.Error(err))
 		c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -870,7 +870,7 @@ func (c *client) prepareInsertType(raw *frame.RawFrame, msg *message.Prepare, id
 // function to handle and select query of prepared type
 func (c *client) prepareSelectType(raw *frame.RawFrame, msg *message.Prepare, id [16]byte) ([]*message.ColumnMetadata, []*message.ColumnMetadata, error) {
 	var variableColumns, columnsWithInOp []string
-	queryMetadata, err := c.proxy.translator.ToSpannerSelect(msg.Query)
+	queryMetadata, err := c.proxy.translator.ToSpannerSelect(c.keyspace, msg.Query)
 	if err != nil {
 		c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.Query), zap.Error(err))
 		c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -923,7 +923,7 @@ func (c *client) prepareSelectType(raw *frame.RawFrame, msg *message.Prepare, id
 // function to handle update query of prepared type
 func (c *client) prepareUpdateType(raw *frame.RawFrame, msg *message.Prepare, id [16]byte) ([]*message.ColumnMetadata, []*message.ColumnMetadata, error) {
 	var returnColumns, variableColumns, columnsWithInOp []string
-	updateQueryMetadata, err := c.proxy.translator.ToSpannerUpdate(msg.Query)
+	updateQueryMetadata, err := c.proxy.translator.ToSpannerUpdate(c.keyspace, msg.Query)
 	if err != nil {
 		c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.Query), zap.Error(err))
 		c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1485,7 +1485,7 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 
 		switch queryType {
 		case selectType:
-			queryMetadata, err := c.proxy.translator.ToSpannerSelect(msg.query)
+			queryMetadata, err := c.proxy.translator.ToSpannerSelect(c.keyspace, msg.query)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1517,7 +1517,7 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 			}
 			c.sender.Send(raw.Header, result)
 		case insertType:
-			queryMetadata, err := c.proxy.translator.ToSpannerUpsert(msg.query)
+			queryMetadata, err := c.proxy.translator.ToSpannerUpsert(c.keyspace, msg.query)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1562,7 +1562,7 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 
 			c.sender.Send(raw.Header, result)
 		case deleteType:
-			queryMetadata, err := c.proxy.translator.ToSpannerDelete(msg.query)
+			queryMetadata, err := c.proxy.translator.ToSpannerDelete(c.keyspace, msg.query)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1601,7 +1601,7 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 			result.Metadata.ColumnCount = int32(len(VariableMetadata))
 			c.sender.Send(raw.Header, result)
 		case updateType:
-			queryMetadata, err := c.proxy.translator.ToSpannerUpdate(msg.query)
+			queryMetadata, err := c.proxy.translator.ToSpannerUpdate(c.keyspace, msg.query)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1824,6 +1824,7 @@ func (c *client) interceptSystemQuery(hdr *frame.Header, stmt interface{}) {
 			c.sender.Send(hdr, &message.Invalid{ErrorMessage: "Doesn't exist"})
 		}
 	case *parser.UseStatement:
+		c.keyspace = s.Keyspace
 		c.sender.Send(hdr, &message.SetKeyspaceResult{Keyspace: s.Keyspace})
 	default:
 		c.sender.Send(hdr, &message.ServerError{ErrorMessage: "Proxy attempted to intercept an unhandled query"})

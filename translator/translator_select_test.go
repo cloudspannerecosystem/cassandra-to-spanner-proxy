@@ -113,7 +113,8 @@ func TestTranslator_ToSpannerSelect(t *testing.T) {
 		Logger *zap.Logger
 	}
 	type args struct {
-		query string
+		query    string
+		keyspace string
 	}
 
 	inputRawQuery := `select column1 AS column_str, column2, column3 from  key_space.test_table
@@ -328,9 +329,36 @@ func TestTranslator_ToSpannerSelect(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "test for query without keyspace in query",
+			args: args{
+				query:    `select column1, column2, column3 from test_table;`,
+				keyspace: `key_space`,
+			},
+			want: &SelectQueryMap{
+				CassandraQuery: `select column1, column2, column3 from test_table;`,
+				QueryType:      "select",
+				SpannerQuery:   "SELECT `column1`,`column2`,`column3` FROM test_table;",
+				Table:          "test_table",
+				Keyspace:       "key_space",
+				ColumnMeta: ColumnMeta{
+					Star:   false,
+					Column: []tableConfig.SelectedColumns{{Name: "column1"}, {Name: "column2"}, {Name: "column3"}},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "error at Column parsing",
 			args: args{
 				query: "select  from test_table;",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "error when no keyspace provided",
+			args: args{
+				query: "select * from test_table where name=test;",
 			},
 			want:    nil,
 			wantErr: true,
@@ -511,7 +539,7 @@ func TestTranslator_ToSpannerSelect(t *testing.T) {
 				TableConfig:     tableConfig,
 				UseRowTimestamp: false,
 			}
-			got, err := tr.ToSpannerSelect(tt.args.query)
+			got, err := tr.ToSpannerSelect(tt.args.keyspace, tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerSelect() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -703,7 +731,7 @@ func TestParseTableFromSelect(t *testing.T) {
 			name:     "Test with no keyspace",
 			input:    "FROM table_name",
 			expected: nil,
-			err:      errors.New("could not find table or keyspace name"),
+			err:      errors.New("could not find keyspace name"),
 		},
 	}
 
@@ -717,7 +745,7 @@ func TestParseTableFromSelect(t *testing.T) {
 				input = p.FromSpec()
 
 			}
-			result, err := parseTableFromSelect(input)
+			result, err := parseTableFromSelect("", input)
 			if !reflect.DeepEqual(result, test.expected) {
 				t.Errorf("Expected result %+v, but got %+v", test.expected, result)
 			}

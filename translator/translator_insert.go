@@ -284,7 +284,7 @@ func getSpannerInsertQuery(data *InsertQueryMap, useRowTimestamp bool) (string, 
 //   - query: CQL Insert query
 //
 // Returns: InsertQueryMap struct and error if any
-func (t *Translator) ToSpannerUpsert(queryStr string) (*InsertQueryMap, error) {
+func (t *Translator) ToSpannerUpsert(keyspace string, queryStr string) (*InsertQueryMap, error) {
 	lowerQuery := strings.ToLower(queryStr)
 	query := renameLiterals(queryStr)
 	p, err := NewCqlParser(query, t.Debug)
@@ -302,18 +302,22 @@ func (t *Translator) ToSpannerUpsert(queryStr string) (*InsertQueryMap, error) {
 	}
 	queryType := kwInsertObj.GetText()
 	insertObj.KwInto()
-	keyspace := insertObj.Keyspace()
 	table := insertObj.Table()
 
 	var columnsResponse ColumnsResponse
 	var checkTSQuery string
 	var formattedTS *time.Time
+	var keyspaceName string
 
-	if keyspace == nil {
-		return nil, errors.New("invalid input parameter found for keyspace")
-	}
-	keyspaceObj := keyspace.OBJECT_NAME()
-	if keyspaceObj == nil {
+	if insertObj.Keyspace() != nil {
+		keyspaceObj := insertObj.Keyspace().OBJECT_NAME()
+		if keyspaceObj == nil {
+			return nil, errors.New("invalid input parameter found for keyspace")
+		}
+		keyspaceName = strings.ToLower(keyspaceObj.GetText())
+	} else if len(keyspace) != 0 {
+		keyspaceName = RemoveQuotesFromKeyspace(keyspace)
+	} else {
 		return nil, errors.New("invalid input parameter found for keyspace")
 	}
 
@@ -325,7 +329,6 @@ func (t *Translator) ToSpannerUpsert(queryStr string) (*InsertQueryMap, error) {
 		return nil, errors.New("invalid input parameter found for table")
 	}
 	tableName := strings.ToLower(tableobj.GetText())
-	keyspaceName := strings.ToLower(keyspaceObj.GetText())
 	if tableName != "" && strings.Contains(tableName, "missing") {
 		return nil, errors.New("no input parameter found for table")
 	}

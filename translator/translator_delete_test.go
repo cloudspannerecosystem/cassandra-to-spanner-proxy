@@ -32,7 +32,8 @@ func TestTranslator_ToSpannerDelete(t *testing.T) {
 		Logger *zap.Logger
 	}
 	type args struct {
-		query string
+		query    string
+		keyspace string
 	}
 
 	inputQuery := `delete from key_space.test_table USING TIMESTAMP 1709052458000212 
@@ -266,6 +267,23 @@ func TestTranslator_ToSpannerDelete(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "query with no keyspace in query",
+			args: args{
+				query:    "delete from test_table",
+				keyspace: "key_space",
+			},
+			want: &DeleteQueryMap{
+				QueryType:    "delete",
+				Table:        "test_table",
+				Keyspace:     "key_space",
+				SpannerQuery: "DELETE FROM test_table;",
+				Params:       map[string]interface{}{},
+				ParamKeys:    []string{},
+				PrimaryKeys:  []string{"column1"},
+			},
+			wantErr: false,
+		},
+		{
 			name: "query with single clause",
 			args: args{
 				query: "delete from key_space.test_table WHERE column1 = 'test'",
@@ -336,7 +354,7 @@ func TestTranslator_ToSpannerDelete(t *testing.T) {
 				Logger:      tt.fields.Logger,
 				TableConfig: tableConfig,
 			}
-			got, err := tr.ToSpannerDelete(tt.args.query)
+			got, err := tr.ToSpannerDelete(tt.args.keyspace, tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerDelete() error = %v, wantErr %v", err, tt.wantErr)
 				return

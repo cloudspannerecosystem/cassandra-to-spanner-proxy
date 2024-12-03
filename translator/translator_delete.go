@@ -45,7 +45,7 @@ func createSpannerDeleteQuery(table string, clauses []Clause) string {
 //   - query: CQL Delete query
 //
 // Returns: DeleteQueryMap struct and error if any
-func (t *Translator) ToSpannerDelete(queryStr string) (*DeleteQueryMap, error) {
+func (t *Translator) ToSpannerDelete(keyspace string, queryStr string) (*DeleteQueryMap, error) {
 	lowerQuery := strings.ToLower(queryStr)
 	query := renameLiterals(queryStr)
 	p, err := NewCqlParser(query, t.Debug)
@@ -62,7 +62,7 @@ func (t *Translator) ToSpannerDelete(queryStr string) (*DeleteQueryMap, error) {
 		return nil, ErrParsingDelObj
 	}
 	queryType := kwDeleteObj.GetText()
-	tableSpec, err := parseTableFromSelect(deleteObj.FromSpec())
+	tableSpec, err := parseTableFromSelect(keyspace, deleteObj.FromSpec())
 	if err != nil {
 		return nil, err
 	} else if tableSpec.TableName == "" || tableSpec.KeyspaceName == "" {

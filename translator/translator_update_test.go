@@ -34,7 +34,8 @@ func TestTranslator_ToSpannerUpdate(t *testing.T) {
 		Logger *zap.Logger
 	}
 	type args struct {
-		query string
+		query    string
+		keyspace string
 	}
 	tests := []struct {
 		name    string
@@ -47,6 +48,26 @@ func TestTranslator_ToSpannerUpdate(t *testing.T) {
 			name: "update success with raw query",
 			args: args{
 				query: "UPDATE key_space.test_table USING TTL 84600 AND TIMESTAMP 1709052458000212 SET column1 = 'testText' , column2 = '0x0000000000000003' WHERE column3='true';",
+			},
+			wantErr: false,
+			want: &UpdateQueryMap{
+				SpannerQuery: "UPDATE test_table SET `spanner_ttl_ts` = @ttlValue , `last_commit_ts` = @tsValue , `column1` = @set1 , `column2` = @set2 WHERE `column3` = @value1 AND `last_commit_ts` <= @tsValue;",
+				ParamKeys:    []string{"ttlValue", "tsValue", "set1", "set2", "value1"},
+				Params: map[string]interface{}{
+					"ttlValue": utilities.AddSecondsToCurrentTimestamp(84600),
+					"tsValue":  timeStamp,
+					"set1":     "testText",
+					"set2":     []byte(string("0x0000000000000003")),
+					"value1":   true,
+				},
+				Keyspace: "key_space",
+			},
+		},
+		{
+			name: "update success with without keyspace in query",
+			args: args{
+				query:    "UPDATE test_table USING TTL 84600 AND TIMESTAMP 1709052458000212 SET column1 = 'testText' , column2 = '0x0000000000000003' WHERE column3='true';",
+				keyspace: "key_space",
 			},
 			wantErr: false,
 			want: &UpdateQueryMap{
@@ -229,7 +250,7 @@ func TestTranslator_ToSpannerUpdate(t *testing.T) {
 				UseRowTimestamp: true,
 				UseRowTTL:       true,
 			}
-			got, err := tr.ToSpannerUpdate(tt.args.query)
+			got, err := tr.ToSpannerUpdate(tt.args.keyspace, tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerUpdate() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -261,7 +282,8 @@ func TestTranslator_ToSpannerUpdateWhenUsingTSTTLIsDisabled(t *testing.T) {
 		Logger *zap.Logger
 	}
 	type args struct {
-		query string
+		query    string
+		keyspace string
 	}
 	tests := []struct {
 		name    string
@@ -304,7 +326,7 @@ func TestTranslator_ToSpannerUpdateWhenUsingTSTTLIsDisabled(t *testing.T) {
 				UseRowTimestamp: false,
 				UseRowTTL:       false,
 			}
-			got, err := tr.ToSpannerUpdate(tt.args.query)
+			got, err := tr.ToSpannerUpdate(tt.args.keyspace, tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerUpdate() error = %v, wantErr %v", err, tt.wantErr)
 				return
