@@ -20,6 +20,7 @@ This limitation is primarily due to the significant differences in schema manage
     | int                   |     ✓     |          INT64          |
     | bigint                |     ✓     |          INT64          |
     | float                 |     ✓     |          FLOAT64        |
+    | double                |     ✓     |          FLOAT64        |
     | boolean               |     ✓     |          BOOL           |
     | uuid                  |     ✓     |          STRING         |
     | map<text, boolean>    |     ✓     |          JSON           |
@@ -200,5 +201,5 @@ We only support limited [system Queries](https://docs.google.com/document/d/1kaz
  -  `SELECT * FROM system_virtual_schema.keyspaces`
  -  `SELECT * FROM system_virtual_schema.tables`
  -  `SELECT * FROM system_virtual_schema.columns`
- -  `USE "keyspace_name"`
+
 
