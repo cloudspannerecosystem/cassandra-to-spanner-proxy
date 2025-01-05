@@ -98,6 +98,7 @@ type Spanner struct {
 	InstanceID      string    `yaml:"instanceId"`
 	DatabaseID      string    `yaml:"databaseId"`
 	ConfigTableName string    `yaml:"configTableName"`
+	Endpoint        string    `yaml:"endpoint"`
 	Session         Session   `yaml:"Session"`
 	Operation       Operation `yaml:"Operation"`
 }
@@ -310,6 +311,7 @@ func Run(ctx context.Context, args []string) int {
 				ConfigTableName:  listener.Spanner.ConfigTableName,
 				InstanceName:     listener.Spanner.InstanceID,
 				GCPProjectID:     listener.Spanner.ProjectID,
+				Endpoint:         listener.Spanner.Endpoint,
 				DatabaseName:     listener.Spanner.DatabaseID,
 				MaxSessions:      uint64(listener.Spanner.Session.Max),
 				MinSessions:      uint64(listener.Spanner.Session.Min),

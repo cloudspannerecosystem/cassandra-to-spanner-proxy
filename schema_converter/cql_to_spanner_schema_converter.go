@@ -32,6 +32,9 @@ import (
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/parser"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type ColumnMetadata struct {
@@ -136,11 +139,13 @@ func main() {
 	projectID := flag.String("project", "", "The project ID")
 	instanceID := flag.String("instance", "", "The Spanner instance ID")
 	databaseID := flag.String("database", "", "The Spanner database ID")
+	endpoint := flag.String("endpoint", "", "The Spanner External Host")
 	cqlFile := flag.String("cql", "", "Path to the CQL file")
 	keyspaceFlatter := flag.Bool("keyspaceFlatter", false, "Whether to enable keyspace flattening (default: false)")
 	tableName := flag.String("table", "TableConfigurations", "The name of the table (default: TableConfigurations)")
 	enableUsingTimestamp := flag.Bool("enableUsingTimestamp", false, "Whether to enable using timestamp (default: false)")
 	enableUsingTTL := flag.Bool("enableUsingTTL", false, "Whether to enable TTL (default: false)")
+	usePlainText := flag.Bool("usePlainText", false, "Whether to use plain text to establish connection")
 	flag.Parse()
 
 	// Check if all required flags are provided
@@ -169,9 +174,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Ensure that GCP credentials are set
-	if err := checkGCPCredentials(); err != nil {
-		log.Fatalf("Error: %v", err)
+	// Ensure that GCP credentials are set except for spanner external host connections
+	if *endpoint == "" {
+		if err := checkGCPCredentials(); err != nil {
+			log.Fatalf("Error: %v", err)
+		}
 	}
 
 	ctx := context.Background()
@@ -180,7 +187,27 @@ func main() {
 	db := fmt.Sprintf("projects/%s/instances/%s/databases/%s", *projectID, *instanceID, *databaseID)
 
 	// Create a Spanner Database Admin client
-	adminClient, err := database.NewDatabaseAdminClient(ctx)
+	var adminClient *database.DatabaseAdminClient
+	var err error
+
+	if *endpoint == "" {
+		adminClient, err = database.NewDatabaseAdminClient(ctx)
+	} else {
+		if *usePlainText {
+			adminClient, err = database.NewDatabaseAdminClient(
+				ctx,
+				option.WithEndpoint(*endpoint),
+				option.WithoutAuthentication(),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
+			)
+		} else {
+			adminClient, err = database.NewDatabaseAdminClient(
+				ctx,
+				option.WithEndpoint(*endpoint),
+			)
+		}
+
+	}
 	if err != nil {
 		log.Fatalf("Failed to create admin client: %v", err)
 	}
@@ -215,7 +242,23 @@ func main() {
 	}
 
 	// Create a Spanner client to interact with the database
-	spannerClient, err := spanner.NewClient(ctx, db)
+	var spannerClient *spanner.Client
+	if *endpoint == "" {
+		spannerClient, err = spanner.NewClient(ctx, db)
+	} else {
+		if *usePlainText {
+			spannerClient, err = spanner.NewClient(ctx, db,
+				option.WithEndpoint("localhost:15000"),
+				option.WithoutAuthentication(),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
+			)
+		} else {
+			spannerClient, err = spanner.NewClient(ctx, db,
+				option.WithEndpoint(*endpoint),
+			)
+		}
+
+	}
 	if err != nil {
 		log.Fatalf("Failed to create spanner client: %v", err)
 	}

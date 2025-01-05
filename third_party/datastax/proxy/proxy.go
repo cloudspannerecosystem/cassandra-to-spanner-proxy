@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"os"
 	"reflect"
 	"sync"
@@ -49,6 +50,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -151,6 +153,7 @@ type SpannerConfig struct {
 	NumOfChannels    int
 	InstanceName     string
 	GCPProjectID     string
+	Endpoint         string
 	MaxSessions      uint64
 	MinSessions      uint64
 	MaxCommitDelay   uint64
@@ -1970,10 +1973,41 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 	}
 
 	database := fmt.Sprintf(SpannerConnectionString, config.SpannerConfig.GCPProjectID, config.SpannerConfig.InstanceName, config.SpannerConfig.DatabaseName)
-	client, err := spanner.NewClientWithConfig(ctx, database,
-		cfg,
-		option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
-		option.WithGRPCDialOption(pool))
+
+	var client *spanner.Client
+	var err error
+
+	endpoint := config.SpannerConfig.Endpoint
+
+	if endpoint == "YOUR_ENDPOINT" || endpoint == "" {
+		client, err = spanner.NewClientWithConfig(ctx, database,
+			cfg,
+			option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
+			option.WithGRPCDialOption(pool))
+	} else {
+		parsedURL, err := url.Parse(endpoint)
+		if err != nil {
+			config.Logger.Error("Failed parsing spanner:endpoint" + err.Error())
+			return nil
+		}
+		if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+			client, err = spanner.NewClientWithConfig(ctx, database,
+				cfg,
+				option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
+				option.WithGRPCDialOption(pool),
+				option.WithEndpoint(config.SpannerConfig.Endpoint),
+				option.WithoutAuthentication(),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
+			)
+		} else {
+			client, err = spanner.NewClientWithConfig(ctx, database,
+				cfg,
+				option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
+				option.WithGRPCDialOption(pool),
+				option.WithEndpoint(config.SpannerConfig.Endpoint),
+			)
+		}
+	}
 	// Create the Spanner client
 	if err != nil {
 		config.Logger.Error("Failed to create client" + err.Error())

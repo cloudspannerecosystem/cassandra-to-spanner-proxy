@@ -45,6 +45,8 @@ listeners:
       databaseId: YOUR_SPANNER_DATABASE
       # [Optional] - Global else default to TableConfigurations
       configTableName: TableConfigurations
+      # [Optional] endpoint configuration for spanner
+      endpoint: YOUR_ENDPOINT
 
       # Spanner Connection Pool Settings
       Session:
