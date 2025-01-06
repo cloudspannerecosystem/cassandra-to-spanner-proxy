@@ -34,6 +34,7 @@ import (
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -146,6 +147,7 @@ func main() {
 	enableUsingTimestamp := flag.Bool("enableUsingTimestamp", false, "Whether to enable using timestamp (default: false)")
 	enableUsingTTL := flag.Bool("enableUsingTTL", false, "Whether to enable TTL (default: false)")
 	usePlainText := flag.Bool("usePlainText", false, "Whether to use plain text to establish connection")
+	ca_certificate_file := flag.String("ca_certificate_file", "", "The CA certificate file to use for TLS")
 	flag.Parse()
 
 	// Check if all required flags are provided
@@ -201,9 +203,17 @@ func main() {
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
+			if *ca_certificate_file == "" {
+				log.Fatalf("ca_certificate_file required for TLS connection on spanner endpoint: %v", err)
+			}
+			creds, credsErr := credentials.NewClientTLSFromFile(*ca_certificate_file, "")
+			if credsErr != nil {
+				log.Fatalf("Error in provided ca_client_certificate : %v", err)
+			}
 			adminClient, err = database.NewDatabaseAdminClient(
 				ctx,
 				option.WithEndpoint(*endpoint),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)),
 			)
 		}
 
@@ -253,8 +263,16 @@ func main() {
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
+			if *ca_certificate_file == "" {
+				log.Fatalf("ca_certificate_file required for TLS connection on spanner endpoint: %v", err)
+			}
+			creds, credsErr := credentials.NewClientTLSFromFile(*ca_certificate_file, "")
+			if credsErr != nil {
+				log.Fatalf("Error in provided ca_client_certificate : %v", err)
+			}
 			spannerClient, err = spanner.NewClient(ctx, db,
 				option.WithEndpoint(*endpoint),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)),
 			)
 		}
 
