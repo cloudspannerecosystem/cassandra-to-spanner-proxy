@@ -1924,8 +1924,6 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 	if os.Getenv("SPANNER_EMULATOR_HOST") == "" {
 		// Enable multiplexed sessions
 		os.Setenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS", "true")
-		// Enable direct access
-		os.Setenv("GOOGLE_SPANNER_ENABLE_DIRECT_ACCESS", "true")
 	}
 	// Implementation
 	// Configure gRPC connection pool with minimum connection timeout
