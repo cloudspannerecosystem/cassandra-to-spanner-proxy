@@ -129,6 +129,7 @@ func TestNewOpenTelemetry(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				config: &OTelConfig{
+					TraceEnabled:     true,
 					TracerEndpoint:   "",
 					MetricEndpoint:   "http://localhost:7061",
 					ServiceName:      "test",
@@ -147,6 +148,7 @@ func TestNewOpenTelemetry(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				config: &OTelConfig{
+					MetricEnabled:    true,
 					TracerEndpoint:   "http://localhost:7060",
 					MetricEndpoint:   "",
 					ServiceName:      "test",

@@ -69,6 +69,8 @@ type TelemetryInitializer interface {
 
 // OTelConfig holds configuration for OpenTelemetry.
 type OTelConfig struct {
+	TraceEnabled       bool
+	MetricEnabled      bool
 	TracerEndpoint     string
 	MetricEndpoint     string
 	ServiceName        string
@@ -130,25 +132,34 @@ func NewOpenTelemetry(ctx context.Context, config *OTelConfig, logger *zap.Logge
 	var shutdownFuncs []func(context.Context) error
 	resource := otelInst.createResource(ctx)
 
-	// Initialize TracerProvider
-	otelInst.TracerProvider, err = otelInst.InitTracerProvider(ctx, resource)
-	if err != nil {
-		logger.Error("error while initializing the tracer provider", zap.Error(err))
-		return nil, nil, err
+	if config.TraceEnabled {
+		// Initialize TracerProvider
+		otelInst.TracerProvider, err = otelInst.InitTracerProvider(ctx, resource)
+		if err != nil {
+			logger.Error("error while initializing the tracer provider", zap.Error(err))
+			return nil, nil, err
+		}
+		otel.SetTracerProvider(otelInst.TracerProvider)
+		otelInst.Tracer = otelInst.TracerProvider.Tracer(config.ServiceName)
+		shutdownFuncs = append(shutdownFuncs, otelInst.TracerProvider.Shutdown)
+	} else {
+		otelInst.Tracer = otel.GetTracerProvider().Tracer(config.ServiceName)
 	}
-	otel.SetTracerProvider(otelInst.TracerProvider)
-	otelInst.Tracer = otelInst.TracerProvider.Tracer(config.ServiceName)
-	shutdownFuncs = append(shutdownFuncs, otelInst.TracerProvider.Shutdown)
 
-	// Initialize MeterProvider
-	otelInst.MeterProvider, err = otelInst.InitMeterProvider(ctx, resource)
-	if err != nil {
-		logger.Error("error while initializing the meter provider", zap.Error(err))
-		return nil, nil, err
+	if config.MetricEnabled {
+		// Initialize MeterProvider
+		otelInst.MeterProvider, err = otelInst.InitMeterProvider(ctx, resource)
+		if err != nil {
+			logger.Error("error while initializing the meter provider", zap.Error(err))
+			return nil, nil, err
+		}
+		otel.SetMeterProvider(otelInst.MeterProvider)
+		otelInst.Meter = otelInst.MeterProvider.Meter(config.ServiceName)
+		shutdownFuncs = append(shutdownFuncs, otelInst.MeterProvider.Shutdown)
+
+	} else {
+		otelInst.Meter = otel.GetMeterProvider().Meter(config.ServiceName)
 	}
-	otel.SetMeterProvider(otelInst.MeterProvider)
-	otelInst.Meter = otelInst.MeterProvider.Meter(config.ServiceName)
-	shutdownFuncs = append(shutdownFuncs, otelInst.MeterProvider.Shutdown)
 	shutdown := shutdownOpenTelemetryComponents(shutdownFuncs)
 	otelInst.requestCount, err = otelInst.Meter.Int64Counter(requestCountMetric, metric.WithDescription("Records metric for number of query requests coming in"), metric.WithUnit("1"))
 	if err != nil {
@@ -268,7 +279,7 @@ func (o *OpenTelemetry) createResource(ctx context.Context) *resource.Resource {
 // CreateTrace starts a new trace span based on provided context, name, attributes, and error.
 // It returns a new context containing the span.
 func (o *OpenTelemetry) StartSpan(ctx context.Context, name string, attrs []attribute.KeyValue) (context.Context, trace.Span) {
-	if !o.Config.OTELEnabled {
+	if !o.Config.OTELEnabled || !o.Config.TraceEnabled {
 		return ctx, nil
 	}
 
@@ -278,7 +289,7 @@ func (o *OpenTelemetry) StartSpan(ctx context.Context, name string, attrs []attr
 
 // RecordError records a new error under a span.
 func (o *OpenTelemetry) RecordError(span trace.Span, err error) {
-	if !o.Config.OTELEnabled {
+	if !o.Config.OTELEnabled || !o.Config.TraceEnabled {
 		return
 	}
 
@@ -299,7 +310,7 @@ func (o *OpenTelemetry) RecordError(span trace.Span, err error) {
 // - err: The error to be recorded and set on the span.
 func (o *OpenTelemetry) SetError(ctx context.Context, err error) {
 	span := trace.SpanFromContext(ctx)
-	if o.Config.OTELEnabled && err != nil {
+	if o.Config.OTELEnabled && o.Config.TraceEnabled && err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 	}
@@ -307,7 +318,7 @@ func (o *OpenTelemetry) SetError(ctx context.Context, err error) {
 
 // EndSpan stops the span.
 func (o *OpenTelemetry) EndSpan(span trace.Span) {
-	if !o.Config.OTELEnabled {
+	if !o.Config.OTELEnabled || !o.Config.TraceEnabled {
 		return
 	}
 
@@ -316,7 +327,7 @@ func (o *OpenTelemetry) EndSpan(span trace.Span) {
 
 // RecordLatencyMetric adds the latency metric based on provided context, name, duration and attributes.
 func (o *OpenTelemetry) RecordLatencyMetric(ctx context.Context, duration time.Time, attrs Attributes) {
-	if !o.Config.OTELEnabled {
+	if !o.Config.OTELEnabled || !o.Config.MetricEnabled {
 		return
 	}
 
@@ -328,7 +339,7 @@ func (o *OpenTelemetry) RecordLatencyMetric(ctx context.Context, duration time.T
 
 // RecordRequestCountMetric adds the request count based on provided context, name and attributes.
 func (o *OpenTelemetry) RecordRequestCountMetric(ctx context.Context, attrs Attributes) {
-	if !o.Config.OTELEnabled {
+	if !o.Config.OTELEnabled || !o.Config.MetricEnabled {
 		return
 	}
 

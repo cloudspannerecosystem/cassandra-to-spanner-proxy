@@ -222,6 +222,8 @@ func NewProxy(ctx context.Context, config Config) (*Proxy, error) {
 	// Initialize OpenTelemetry
 	if config.OtelConfig.Enabled {
 		otelInit = &otelgo.OTelConfig{
+			TraceEnabled:       config.OtelConfig.Traces.Enabled,
+			MetricEnabled:      config.OtelConfig.Metrics.Enabled,
 			TracerEndpoint:     config.OtelConfig.Traces.Endpoint,
 			MetricEndpoint:     config.OtelConfig.Metrics.Endpoint,
 			ServiceName:        config.OtelConfig.ServiceName,
@@ -1949,20 +1951,22 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 
 	// If OpenTelemetry is provided, configure instrumentation
 	if config.OtelConfig.Enabled && ot != nil {
-		if config.OtelConfig.EnabledClientSideMetrics {
-			// Enable OpenTelemetry metrics before injecting meter provider.
-			spanner.EnableOpenTelemetryMetrics()
+		if config.OtelConfig.Metrics.Enabled {
+			if config.OtelConfig.EnabledClientSideMetrics {
+				// Enable OpenTelemetry metrics before injecting meter provider.
+				spanner.EnableOpenTelemetryMetrics()
+			}
+			// Add OpenTelemetry instrumentation to Spanner client configuration
+			cfg.OpenTelemetryMeterProvider = ot.MeterProvider
 		}
-		// Setting the GOOGLE_API_GO_EXPERIMENTAL_TELEMETRY_PLATFORM_TRACING env varibale to 'opentelemetry' will enable traces on spanner client library.
-		os.Setenv("GOOGLE_API_GO_EXPERIMENTAL_TELEMETRY_PLATFORM_TRACING", "opentelemetry")
 
-		// Set up OpenTelemetry traces and metrics
-		otel.SetTracerProvider(ot.TracerProvider)
+		if config.OtelConfig.Traces.Enabled {
+			// Setting the GOOGLE_API_GO_EXPERIMENTAL_TELEMETRY_PLATFORM_TRACING env varibale to 'opentelemetry' will enable traces on spanner client library.
+			os.Setenv("GOOGLE_API_GO_EXPERIMENTAL_TELEMETRY_PLATFORM_TRACING", "opentelemetry")
 
-		// Add OpenTelemetry instrumentation to Spanner client configuration
-		cfg.OpenTelemetryMeterProvider = ot.MeterProvider
-	} else {
-		// 	cfg.OpenTelemetryMeterProvider = ot.MeterProvider
+			// Set up OpenTelemetry traces and metrics
+			otel.SetTracerProvider(ot.TracerProvider)
+		}
 	}
 
 	database := fmt.Sprintf(SpannerConnectionString, config.SpannerConfig.GCPProjectID, config.SpannerConfig.InstanceName, config.SpannerConfig.DatabaseName)

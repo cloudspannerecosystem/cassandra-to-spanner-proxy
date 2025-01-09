@@ -16,9 +16,14 @@ func ValidateAndApplyDefaults(cfg *UserConfig) error {
 		return fmt.Errorf("listener configuration is missing in `config.yaml`")
 	}
 	if cfg.Otel != nil && cfg.Otel.Enabled {
-		if cfg.Otel.Metrics.Endpoint == "" || cfg.Otel.Traces.Endpoint == "" || cfg.Otel.ServiceName == "" {
-			return fmt.Errorf("define all of these parameters in config - otel.metrics.endpoint, otel.traces.endpoint, otel.serviceName")
+		if cfg.Otel.Metrics.Enabled && (cfg.Otel.Metrics.Endpoint == "" || cfg.Otel.ServiceName == "") {
+			return fmt.Errorf("define all of these parameters in config - otel.metrics.endpoint, otel.serviceName")
 		}
+
+		if cfg.Otel.Traces.Enabled && (cfg.Otel.Traces.Endpoint == "" || cfg.Otel.ServiceName == "") {
+			return fmt.Errorf("define all of these parameters in config - otel.traces.endpoint, otel.serviceName")
+		}
+
 		// assign default value for SamplingRatio
 		if cfg.Otel.Traces.SamplingRatio == 0 {
 			cfg.Otel.Traces.SamplingRatio = 0.05

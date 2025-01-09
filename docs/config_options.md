@@ -94,9 +94,13 @@ otel:
         # Health check endpoint for the OTEL collector service
         endpoint: YOUR_OTEL_COLLECTOR_HEALTHCHECK_ENDPOINT
     metrics:
+        # Set enabled to true or false for OTEL metrics
+        enabled: True
         # Collector service endpoint
         endpoint: YOUR_OTEL_COLLECTOR_SERVICE_ENDPOINT
     traces:
+        # Set enabled to true or false for OTEL traces
+        enabled: True
         # Collector service endpoint
         endpoint: YOUR_OTEL_COLLECTOR_SERVICE_ENDPOINT
         #Sampling ratio should be between 0 and 1. Here 0.05 means 5/100 Sampling ratio.
@@ -154,9 +158,11 @@ otel:
     enabled: True
     endpoint: localhost:13133
   metrics:
+    enabled: True
     endpoint: localhost:4317
 
   traces:
+    enabled: True
     endpoint: localhost:4317
     samplingRatio: 0.05
 
