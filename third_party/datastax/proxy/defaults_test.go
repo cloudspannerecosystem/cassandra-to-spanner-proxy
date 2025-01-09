@@ -12,7 +12,7 @@ func TestValidateAndApplyDefaultsNoListeners(t *testing.T) {
 	}
 }
 
-func TestValidateAndApplyDefaultsMissingOtelEndpoints(t *testing.T) {
+func TestValidateAndApplyDefaultsMissingOtelMetricEndpoint(t *testing.T) {
 	cfg := &UserConfig{
 		Listeners: []Listener{
 			{
@@ -33,11 +33,11 @@ func TestValidateAndApplyDefaultsMissingOtelEndpoints(t *testing.T) {
 				Enabled       bool    `yaml:"enabled"`
 				Endpoint      string  `yaml:"endpoint"`
 				SamplingRatio float64 `yaml:"samplingRatio"`
-			}{Enabled: true, Endpoint: "", SamplingRatio: 0},
+			}{Enabled: false, Endpoint: "", SamplingRatio: 0},
 		},
 	}
 	err := ValidateAndApplyDefaults(cfg)
-	expectedError := "define all of these parameters in config - otel.metrics.endpoint, otel.traces.endpoint, otel.serviceName"
+	expectedError := "define all of these parameters in config - otel.metrics.endpoint, otel.serviceName"
 	if err == nil || err.Error() != expectedError {
 		t.Errorf("Expected error for missing Otel endpoints, got: %v", err)
 	}
