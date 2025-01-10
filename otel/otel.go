@@ -140,11 +140,9 @@ func NewOpenTelemetry(ctx context.Context, config *OTelConfig, logger *zap.Logge
 			return nil, nil, err
 		}
 		otel.SetTracerProvider(otelInst.TracerProvider)
-		otelInst.Tracer = otelInst.TracerProvider.Tracer(config.ServiceName)
 		shutdownFuncs = append(shutdownFuncs, otelInst.TracerProvider.Shutdown)
-	} else {
-		otelInst.Tracer = otel.GetTracerProvider().Tracer(config.ServiceName)
 	}
+	otelInst.Tracer = otel.GetTracerProvider().Tracer(config.ServiceName)
 
 	if config.MetricEnabled {
 		// Initialize MeterProvider
