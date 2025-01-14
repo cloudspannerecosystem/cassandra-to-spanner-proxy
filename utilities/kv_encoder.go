@@ -1,7 +1,7 @@
 package utilities
 
 // adapted from https://github.com/uber-go/zap/blob/master/zapcore/json_encoder.go
-// and https://github.com/uber-go/zap/blob/master/zapcore/console_encoder.go'
+// and https://github.com/uber-go/zap/blob/master/zapcore/console_encoder.go
 
 import (
 	"encoding/base64"

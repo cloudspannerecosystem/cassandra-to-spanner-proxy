@@ -131,8 +131,7 @@ loggerConfig:
     compress: True
 
 
-    # Encoding sets the logger's encoding. Valid values are "json", "key-value" and
-	  # "console"
+    # Encoding sets the logger's encoding. Valid values are "json" (default), "key-value" and "console".
     encoding: ENCODING_TYPE
 ```
 

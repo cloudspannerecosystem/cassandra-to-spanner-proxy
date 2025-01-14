@@ -32,7 +32,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const keyValueEncoding = "key-value"
+const (
+	keyValueEncoding = "key-value"
+	defaultEncoding  = "json"
+)
 
 type LoggerConfig struct {
 	OutputType string `yaml:"outputType"`
@@ -349,9 +352,9 @@ func SetupLogger(logLevel string, loggerConfig *LoggerConfig) (*zap.Logger, erro
 		return setupFileLogger(level, loggerConfig)
 	}
 
-	encoding := "json"
+	encoding := defaultEncoding
 	if loggerConfig != nil {
-		encoding = defaultIfEmpty(loggerConfig.Encoding, "json")
+		encoding = defaultIfEmpty(loggerConfig.Encoding, defaultEncoding)
 	}
 
 	return setupConsoleLogger(level, encoding)
