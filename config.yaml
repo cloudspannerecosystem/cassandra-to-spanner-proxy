@@ -138,9 +138,13 @@ otel:
     # Health check endpoint for the OTEL collector service
     endpoint: YOUR_OTEL_COLLECTOR_HEALTHCHECK_ENDPOINT
   metrics:
+    # Enable/Disable metrics, Default 'False'.
+    enabled: False
     # Collector service endpoint
     endpoint: YOUR_OTEL_COLLECTOR_SERVICE_ENDPOINT
   traces:
+    # Enable/Disable traces, Default 'False'.
+    enabled: False
     # Collector service endpoint
     endpoint: YOUR_OTEL_COLLECTOR_SERVICE_ENDPOINT
     #Sampling ratio should be between 0 and 1. Here 0.05 means 5/100 Sampling ratio.

@@ -12,7 +12,7 @@ func TestValidateAndApplyDefaultsNoListeners(t *testing.T) {
 	}
 }
 
-func TestValidateAndApplyDefaultsMissingOtelEndpoints(t *testing.T) {
+func TestValidateAndApplyDefaultsMissingOtelMetricEndpoint(t *testing.T) {
 	cfg := &UserConfig{
 		Listeners: []Listener{
 			{
@@ -26,16 +26,18 @@ func TestValidateAndApplyDefaultsMissingOtelEndpoints(t *testing.T) {
 		Otel: &OtelConfig{
 			Enabled: true,
 			Metrics: struct {
+				Enabled  bool   `yaml:"enabled"`
 				Endpoint string `yaml:"endpoint"`
-			}{Endpoint: ""},
+			}{Enabled: true, Endpoint: ""},
 			Traces: struct {
+				Enabled       bool    `yaml:"enabled"`
 				Endpoint      string  `yaml:"endpoint"`
 				SamplingRatio float64 `yaml:"samplingRatio"`
-			}{Endpoint: "", SamplingRatio: 0},
+			}{Enabled: false, Endpoint: "", SamplingRatio: 0},
 		},
 	}
 	err := ValidateAndApplyDefaults(cfg)
-	expectedError := "define all of these parameters in config - otel.metrics.endpoint, otel.traces.endpoint, otel.serviceName"
+	expectedError := "define all of these parameters in config - otel.metrics.endpoint, otel.serviceName"
 	if err == nil || err.Error() != expectedError {
 		t.Errorf("Expected error for missing Otel endpoints, got: %v", err)
 	}
@@ -110,12 +112,14 @@ func TestValidateAndApplyDefaultsDefaultsApplied(t *testing.T) {
 			Enabled:     true,
 			ServiceName: "SomeService", // Add this to satisfy the required condition
 			Metrics: struct {
+				Enabled  bool   `yaml:"enabled"`
 				Endpoint string `yaml:"endpoint"`
-			}{Endpoint: "metrics.endpoint"},
+			}{Enabled: true, Endpoint: "metrics.endpoint"},
 			Traces: struct {
+				Enabled       bool    `yaml:"enabled"`
 				Endpoint      string  `yaml:"endpoint"`
 				SamplingRatio float64 `yaml:"samplingRatio"`
-			}{Endpoint: "traces.endpoint", SamplingRatio: 0},
+			}{Enabled: true, Endpoint: "traces.endpoint", SamplingRatio: 0},
 		},
 		CassandraToSpannerConfigs: CassandraToSpannerConfigs{
 			ProjectID:       "default-project",

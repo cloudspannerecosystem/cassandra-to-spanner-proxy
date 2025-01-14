@@ -74,9 +74,11 @@ type OtelConfig struct {
 		Endpoint string `yaml:"endpoint"`
 	} `yaml:"healthcheck"`
 	Metrics struct {
+		Enabled  bool   `yaml:"enabled"`
 		Endpoint string `yaml:"endpoint"`
 	} `yaml:"metrics"`
 	Traces struct {
+		Enabled       bool    `yaml:"enabled"`
 		Endpoint      string  `yaml:"endpoint"`
 		SamplingRatio float64 `yaml:"samplingRatio"`
 	} `yaml:"traces"`
