@@ -7,6 +7,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"math"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
@@ -113,6 +115,10 @@ func (enc *keyValueEncoder) AddTime(key string, val time.Time) {
 	enc.AppendTime(val)
 }
 
+func (enc *keyValueEncoder) AddTimeWithoutKey(val time.Time) {
+	enc.AppendTime(val)
+}
+
 func (enc *keyValueEncoder) AddUint64(key string, val uint64) {
 	enc.addKey(key)
 	enc.AppendUint64(val)
@@ -171,6 +177,9 @@ func (enc *keyValueEncoder) AppendReflected(val interface{}) error {
 }
 
 func (enc *keyValueEncoder) AppendString(val string) {
+	if strings.Contains(val, " ") || strings.Contains(val, "=") {
+		val = url.QueryEscape(val)
+	}
 	enc.safeAddString(val)
 }
 
@@ -228,17 +237,16 @@ func (enc *keyValueEncoder) clone() *keyValueEncoder {
 func (enc *keyValueEncoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
 	final := enc.clone()
 
+	if final.TimeKey != "" {
+		final.AddTimeWithoutKey(ent.Time)
+		final.addElementSeparator()
+	}
 	if final.LevelKey != "" {
-		final.addKey(final.LevelKey)
 		cur := final.buf.Len()
 		final.EncodeLevel(ent.Level, final)
 		if cur == final.buf.Len() {
 			final.AppendString(ent.Level.String())
 		}
-		final.addElementSeparator()
-	}
-	if final.TimeKey != "" {
-		final.AddTime(final.TimeKey, ent.Time)
 		final.addElementSeparator()
 	}
 	if ent.LoggerName != "" && final.NameKey != "" {
