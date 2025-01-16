@@ -23,6 +23,7 @@ import (
 
 	"cloud.google.com/go/spanner"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
+	customencoder "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/zap"
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/frame"
 	"github.com/datastax/go-cassandra-native-protocol/message"
@@ -434,7 +435,7 @@ func setupConsoleLogger(level zap.AtomicLevel, encoding string) (*zap.Logger, er
 
 func registerKeyValueEncoder() {
 	zap.RegisterEncoder(keyValueEncoding, func(c zapcore.EncoderConfig) (zapcore.Encoder, error) {
-		return NewKeyValueEncoder(c), nil
+		return customencoder.NewKeyValueEncoder(c), nil
 	})
 }
 

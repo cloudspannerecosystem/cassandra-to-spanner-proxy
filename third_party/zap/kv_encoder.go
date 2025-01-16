@@ -1,4 +1,4 @@
-package utilities
+package zap
 
 // adapted from https://github.com/uber-go/zap/blob/master/zapcore/json_encoder.go
 // and https://github.com/uber-go/zap/blob/master/zapcore/console_encoder.go
@@ -180,7 +180,7 @@ func (enc *keyValueEncoder) AppendString(val string) {
 	if strings.Contains(val, " ") || strings.Contains(val, "=") {
 		val = url.QueryEscape(val)
 	}
-	enc.safeAddString(val)
+	enc.buf.AppendString(val)
 }
 
 func (enc *keyValueEncoder) AppendTime(val time.Time) {
