@@ -28,7 +28,6 @@ import (
 	"encoding/json"
 	"math"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
@@ -196,16 +195,14 @@ func (enc *keyValueEncoder) AppendReflected(val interface{}) error {
 	return err
 }
 
+// This function performs URL encoding of a given string.
 func (enc *keyValueEncoder) AppendString(val string) {
-	if strings.Contains(val, " ") || strings.Contains(val, "=") {
-		val = url.QueryEscape(val)
-	}
-	enc.buf.AppendString(val)
+	enc.buf.AppendString(url.QueryEscape(val))
 }
 
 func (enc *keyValueEncoder) AppendTime(val time.Time) {
 	cur := enc.buf.Len()
-	enc.EncodeTime(val, enc)
+	enc.safeAddString(val.Format("2006-01-02T15:04:05.000Z0700"))
 	if cur == enc.buf.Len() {
 		// User-supplied EncodeTime is a no-op. Fall back to nanos since epoch to keep
 		// output JSON valid.
