@@ -22,14 +22,20 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
+	customencoder "github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/zap"
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/frame"
 	"github.com/datastax/go-cassandra-native-protocol/message"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	"github.com/natefinch/lumberjack"
-	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+)
+
+const (
+	keyValueEncoding = "key-value"
+	defaultEncoding  = "json"
 )
 
 type LoggerConfig struct {
@@ -39,6 +45,7 @@ type LoggerConfig struct {
 	MaxBackups int    `yaml:"maxBackups"` // The value of MaxBackups determines how many previous log files are kept after a new log file is created due to the MaxSize or MaxAge limits.
 	MaxAge     int    `yaml:"maxAge"`     // days
 	Compress   bool   `yaml:"compress"`   // the rotated log files to be compressed to save disk space.
+	Encoding   string `yaml:"encoding"`
 }
 
 // DecodeBytesToSpannerColumnType - Function to decode incoming bytes parameter
@@ -346,7 +353,12 @@ func SetupLogger(logLevel string, loggerConfig *LoggerConfig) (*zap.Logger, erro
 		return setupFileLogger(level, loggerConfig)
 	}
 
-	return setupConsoleLogger(level)
+	encoding := defaultEncoding
+	if loggerConfig != nil {
+		encoding = defaultIfEmpty(loggerConfig.Encoding, defaultEncoding)
+	}
+
+	return setupConsoleLogger(level, encoding)
 }
 
 // getLogLevel translates a string log level to a zap.AtomicLevel.
@@ -394,10 +406,13 @@ func setupFileLogger(level zap.AtomicLevel, loggerConfig *LoggerConfig) (*zap.Lo
 // setupConsoleLogger configures a zap.Logger for console output.
 // Accepts a zap.AtomicLevel to set the logging level.
 // Returns the configured zap.Logger or an error if setup fails.
-func setupConsoleLogger(level zap.AtomicLevel) (*zap.Logger, error) {
+func setupConsoleLogger(level zap.AtomicLevel, encoding string) (*zap.Logger, error) {
+	if encoding == keyValueEncoding {
+		registerKeyValueEncoder()
+	}
 	config := zap.Config{
-		Encoding:         "json", // or "console"
-		Level:            level,  // default log level
+		Encoding:         encoding,
+		Level:            level, // default log level
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
 		EncoderConfig: zapcore.EncoderConfig{
@@ -416,6 +431,12 @@ func setupConsoleLogger(level zap.AtomicLevel) (*zap.Logger, error) {
 	}
 
 	return config.Build()
+}
+
+func registerKeyValueEncoder() {
+	zap.RegisterEncoder(keyValueEncoding, func(c zapcore.EncoderConfig) (zapcore.Encoder, error) {
+		return customencoder.NewKeyValueEncoder(c), nil
+	})
 }
 
 // defaultIfEmpty returns a default string value if the provided value is empty.

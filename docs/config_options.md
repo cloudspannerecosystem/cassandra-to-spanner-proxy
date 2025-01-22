@@ -133,6 +133,10 @@ loggerConfig:
     # Set this only if the outputType is set to `file`.
     # Default value is set to 'False'. Change the value to 'True' for compressing the log files.
     compress: True
+
+
+    # Encoding sets the logger's encoding. Valid values are "json" (default), "key-value" and "console".
+    encoding: ENCODING_TYPE
 ```
 
 # Example config.yaml
