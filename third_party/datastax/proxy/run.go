@@ -41,7 +41,7 @@ var (
 	clusterReleaseversion = "4.0.0.6816"
 	defaultCqlVersion     = "3.4.5"
 	TCP_BIND_PORT         = "0.0.0.0:%s"
-	proxyReleaseVersion   = "v1.0.0"
+	proxyReleaseVersion   = "v1.0.2"
 )
 var readFile = os.ReadFile
 
