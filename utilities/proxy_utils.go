@@ -396,11 +396,12 @@ func setupFileLogger(level zap.AtomicLevel, loggerConfig *LoggerConfig) (*zap.Lo
 	}
 
 	var encoder zapcore.Encoder
-	if loggerConfig.Encoding == keyValueEncoding {
+	switch loggerConfig.Encoding {
+	case keyValueEncoding:
 		encoder = customencoder.NewKeyValueEncoder(zap.NewProductionEncoderConfig())
-	} else if loggerConfig.Encoding == consoleEncoding {
+	case consoleEncoding:
 		encoder = zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
-	} else {
+	default:
 		encoder = zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 	}
 
