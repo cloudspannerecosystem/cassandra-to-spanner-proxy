@@ -284,6 +284,7 @@ func Run(ctx context.Context, args []string) int {
 	logger.Info("Partitioner:" + partitioner)
 	logger.Info("Data Center:" + cfg.DataCenter)
 	logger.Info("Configured keyspace name flattening status", zap.Bool("isKeyspaceFlatteningEnabled", UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter))
+	logger.Info("GOOGLE_SPANNER_ENABLE_DIRECT_ACCESS:" + os.Getenv("GOOGLE_SPANNER_ENABLE_DIRECT_ACCESS"))
 	logger.Debug("Configuration - ", zap.Any("UserConfig", UserConfig))
 	var wg sync.WaitGroup
 
