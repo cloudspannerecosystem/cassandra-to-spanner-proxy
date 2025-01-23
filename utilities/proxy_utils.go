@@ -35,6 +35,7 @@ import (
 
 const (
 	keyValueEncoding = "key-value"
+	consoleEncoding  = "console"
 	defaultEncoding  = "json"
 )
 
@@ -394,8 +395,19 @@ func setupFileLogger(level zap.AtomicLevel, loggerConfig *LoggerConfig) (*zap.Lo
 		Compress:   loggerConfig.Compress,
 	}
 
+	cfg := zap.NewProductionEncoderConfig()
+	var encoder zapcore.Encoder
+	switch loggerConfig.Encoding {
+	case keyValueEncoding:
+		encoder = customencoder.NewKeyValueEncoder(cfg)
+	case consoleEncoding:
+		encoder = zapcore.NewConsoleEncoder(cfg)
+	default:
+		encoder = zapcore.NewJSONEncoder(cfg)
+	}
+
 	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		encoder,
 		zapcore.AddSync(rotationalLogger),
 		level,
 	)
