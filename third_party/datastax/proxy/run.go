@@ -284,7 +284,12 @@ func Run(ctx context.Context, args []string) int {
 	logger.Info("Partitioner:" + partitioner)
 	logger.Info("Data Center:" + cfg.DataCenter)
 	logger.Info("Configured keyspace name flattening status", zap.Bool("isKeyspaceFlatteningEnabled", UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter))
-	logger.Info("GOOGLE_SPANNER_ENABLE_DIRECT_ACCESS:" + os.Getenv("GOOGLE_SPANNER_ENABLE_DIRECT_ACCESS"))
+	enableDirectPath, err := strconv.ParseBool(strings.TrimSpace(os.Getenv("GOOGLE_SPANNER_ENABLE_DIRECT_ACCESS")))
+	if err == nil && enableDirectPath {
+		logger.Info("Google Spanner Direct Path Feature Enabled")
+	} else {
+		logger.Info("Google Spanner Direct Path Feature Disabled")
+	}
 	logger.Debug("Configuration - ", zap.Any("UserConfig", UserConfig))
 	var wg sync.WaitGroup
 
