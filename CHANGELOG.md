@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.0.3] - 2025-01-24
+
+### Features
+* Add logging on whether direct path feature is enabled on proxy startup.
+
+### Bug Fixes
+* Fix file logger to support KeyValue encoding.
 
 # [1.0.2] - 2025-01-22
 
