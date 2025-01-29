@@ -38,10 +38,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/api/option"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type ColumnMetadata struct {
@@ -174,7 +170,6 @@ func main() {
 	instanceID := flag.String("instance", "", "The Spanner instance ID")
 	databaseID := flag.String("database", "", "The Spanner database ID")
 	endpoint := flag.String("endpoint", "", "The Spanner External Host")
-	endpoint := flag.String("endpoint", "", "The Spanner External Host")
 	cqlFile := flag.String("cql", "", "Path to the CQL file")
 	keyspaceFlatter := flag.Bool("keyspaceFlatter", false, "Whether to enable keyspace flattening (default: false)")
 	tableName := flag.String("table", "TableConfigurations", "The name of the table (default: TableConfigurations)")
@@ -213,11 +208,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Ensure that GCP credentials are set except for spanner external host connections
-	if *endpoint == "" {
-		if err := checkGCPCredentials(); err != nil {
-			log.Fatalf("Error: %v", err)
-		}
 	// Ensure that GCP credentials are set except for spanner external host connections
 	if *endpoint == "" {
 		if err := checkGCPCredentials(); err != nil {
