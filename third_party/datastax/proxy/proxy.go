@@ -1982,38 +1982,31 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 
 	endpoint := config.Endpoint
 
-	if endpoint == "" {
-		client, err = spanner.NewClientWithConfig(ctx, database,
-			cfg,
-			option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
-			option.WithGRPCDialOption(pool))
-	} else {
-		config.Logger.Info("Using Spanner endpoint: " + endpoint)
+	opts := []option.ClientOption{
+		option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
+		option.WithGRPCDialOption(pool),
+	}
 
+	if endpoint != "" {
+		config.Logger.Info("Using Spanner endpoint: " + endpoint)
+		opts = append(opts, option.WithEndpoint(endpoint))
 		if config.UsePlainText {
-			client, err = spanner.NewClientWithConfig(ctx, database,
-				cfg,
-				option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
-				option.WithGRPCDialOption(pool),
-				option.WithEndpoint(config.Endpoint),
-				option.WithoutAuthentication(),
-				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-			)
+			opts = append(opts, option.WithoutAuthentication())
+			opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
 		} else {
 			creds, credsErr := utilities.NewCred(config.CaCertificate, config.ClientCertificate, config.ClientKey)
 			if credsErr != nil {
 				config.Logger.Error(credsErr.Error())
 				return nil
 			}
-			client, err = spanner.NewClientWithConfig(ctx, database,
-				cfg,
-				option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
-				option.WithGRPCDialOption(pool),
-				option.WithEndpoint(config.Endpoint),
-				option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)),
-			)
+			opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)))
 		}
+	} else {
+		opts = append(opts, option.WithGRPCDialOption(pool))
 	}
+
+	client, err = spanner.NewClientWithConfig(ctx, database, cfg, opts...)
+
 	// Create the Spanner client
 	if err != nil {
 		config.Logger.Error("Failed to create client" + err.Error())

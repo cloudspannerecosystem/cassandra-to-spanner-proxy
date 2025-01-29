@@ -195,28 +195,22 @@ func main() {
 	var adminClient *database.DatabaseAdminClient
 	var err error
 
-	if *endpoint == "" {
-		adminClient, err = database.NewDatabaseAdminClient(ctx)
-	} else {
+	opts := []option.ClientOption{}
+	if *endpoint != "" {
+		opts = append(opts, option.WithEndpoint(*endpoint))
 		if *usePlainText {
-			adminClient, err = database.NewDatabaseAdminClient(
-				ctx,
-				option.WithEndpoint(*endpoint),
-				option.WithoutAuthentication(),
-				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-			)
+			opts = append(opts, option.WithoutAuthentication())
+			opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
 		} else {
 			creds, credsErr := utilities.NewCred(*caCertificate, *clientCertificate, *clientKey)
 			if credsErr != nil {
 				log.Fatalf("%v", credsErr)
 			}
-			adminClient, err = database.NewDatabaseAdminClient(
-				ctx,
-				option.WithEndpoint(*endpoint),
-				option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)),
-			)
+			opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)))
 		}
+
 	}
+	adminClient, err = database.NewDatabaseAdminClient(ctx, opts...)
 	if err != nil {
 		log.Fatalf("Failed to create admin client: %v", err)
 	}
@@ -252,27 +246,7 @@ func main() {
 
 	// Create a Spanner client to interact with the database
 	var spannerClient *spanner.Client
-	if *endpoint == "" {
-		spannerClient, err = spanner.NewClient(ctx, db)
-	} else {
-		if *usePlainText {
-			spannerClient, err = spanner.NewClient(ctx, db,
-				option.WithEndpoint(*endpoint),
-				option.WithoutAuthentication(),
-				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-			)
-		} else {
-			creds, credsErr := utilities.NewCred(*caCertificate, *clientCertificate, *clientKey)
-			if credsErr != nil {
-				log.Fatalf("%v", credsErr)
-			}
-			spannerClient, err = spanner.NewClient(ctx, db,
-				option.WithEndpoint(*endpoint),
-				option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)),
-			)
-		}
-
-	}
+	spannerClient, err = spanner.NewClient(ctx, db, opts...)
 	if err != nil {
 		log.Fatalf("Failed to create spanner client: %v", err)
 	}
