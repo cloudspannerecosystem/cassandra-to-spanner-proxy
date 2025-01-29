@@ -1977,16 +1977,14 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 
 	database := fmt.Sprintf(SpannerConnectionString, config.SpannerConfig.GCPProjectID, config.SpannerConfig.InstanceName, config.SpannerConfig.DatabaseName)
 
-	endpoint := config.Endpoint
-
 	opts := []option.ClientOption{
 		option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
 		option.WithGRPCDialOption(pool),
 	}
 
-	if endpoint != "" {
-		config.Logger.Info("Using Spanner endpoint: " + endpoint)
-		opts = append(opts, option.WithEndpoint(endpoint))
+	if config.Endpoint != "" {
+		config.Logger.Info("Using Spanner endpoint: " + config.Endpoint)
+		opts = append(opts, option.WithEndpoint(config.Endpoint))
 		if config.UsePlainText {
 			opts = append(opts, option.WithoutAuthentication())
 			opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
