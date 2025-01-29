@@ -63,9 +63,9 @@ type CassandraToSpannerConfigs struct {
 	UseRowTTL         bool   `yaml:"useRowTTL"`
 	UseRowTimestamp   bool   `yaml:"useRowTimestamp"`
 	Endpoint          string `yaml:"endpoint"`
-	CaCertificate     string `yaml:"ca_certificate"`
-	ClientCertificate string `yaml:"client_certificate"`
-	ClientKey         string `yaml:"client_key"`
+	CaCertificate     string `yaml:"caCertificate"`
+	ClientCertificate string `yaml:"clientCertificate"`
+	ClientKey         string `yaml:"clientKey"`
 	UsePlainText      bool   `yaml:"usePlainText"`
 }
 

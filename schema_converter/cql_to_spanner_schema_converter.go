@@ -147,9 +147,9 @@ func main() {
 	enableUsingTimestamp := flag.Bool("enableUsingTimestamp", false, "Whether to enable using timestamp (default: false)")
 	enableUsingTTL := flag.Bool("enableUsingTTL", false, "Whether to enable TTL (default: false)")
 	usePlainText := flag.Bool("usePlainText", false, "Whether to use plain text to establish connection")
-	ca_certificate := flag.String("ca_certificate", "", "The CA certificate file to use for TLS")
-	client_certificate := flag.String("client_certificate", "", "The client certificate to establish mTLS for external hosts")
-	client_key := flag.String("client_key", "", "The client key to establish mTLS for external hosts")
+	caCertificate := flag.String("caCertificate", "", "The CA certificate file to use for TLS")
+	clientCertificate := flag.String("clientCertificate", "", "The client certificate to establish mTLS for external hosts")
+	clientKey := flag.String("clientKey", "", "The client key to establish mTLS for external hosts")
 
 	flag.Parse()
 
@@ -206,7 +206,7 @@ func main() {
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
-			creds, credsErr := utilities.NewCred(*ca_certificate, *client_certificate, *client_key)
+			creds, credsErr := utilities.NewCred(*caCertificate, *clientCertificate, *clientKey)
 			if credsErr != nil {
 				log.Fatalf("%v", credsErr)
 			}
@@ -262,7 +262,7 @@ func main() {
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
-			creds, credsErr := utilities.NewCred(*ca_certificate, *client_certificate, *client_key)
+			creds, credsErr := utilities.NewCred(*caCertificate, *clientCertificate, *clientKey)
 			if credsErr != nil {
 				log.Fatalf("%v", credsErr)
 			}

@@ -31,13 +31,13 @@ cassandra_to_spanner_configs:
     usePlainText : False
 
     # [Optional] CA certificate path for TLS/mTLS configuration
-    ca_certificate : PATH/TO/CA_CERTIFICATE
+    caCertificate : PATH/TO/CA_CERTIFICATE
 
     # [Optional] client certificate path for mTLS configuration
-    client_certificate : PATH/TO/CLIENT_CERTIFICATE
+    clientCertificate : PATH/TO/CLIENT_CERTIFICATE
     
     # [Optional] client key path for mTLS configuration
-    client_key : PATH/TO/CLIENT_KEY
+    clientKey : PATH/TO/CLIENT_KEY
 
 listeners:
   - name: YOUR_CLUSTER_NAME_1
