@@ -138,30 +138,30 @@ type Config struct {
 	CQLVersion        string
 	// PreparedCache a cache that stores prepared queries. If not set it uses the default implementation with a max
 	// capacity of ~100MB.
-	PreparedCache   proxycore.PreparedCache
-	KeyspaceFlatter bool
-	UseRowTimestamp bool
-	UseRowTTL       bool
-	Debug           bool
-	UserAgent       string
-}
-
-type SpannerConfig struct {
-	DatabaseName      string
-	ConfigTableName   string
-	NumOfChannels     int
-	InstanceName      string
-	GCPProjectID      string
-	Endpoint          string
-	MaxSessions       uint64
-	MinSessions       uint64
-	MaxCommitDelay    uint64
-	ReplayProtection  bool
+	PreparedCache     proxycore.PreparedCache
 	KeyspaceFlatter   bool
+	UseRowTimestamp   bool
+	UseRowTTL         bool
+	Debug             bool
+	UserAgent         string
+	Endpoint          string
 	CaCertificate     string
 	ClientCertificate string
 	ClientKey         string
 	UsePlainText      bool
+}
+
+type SpannerConfig struct {
+	DatabaseName     string
+	ConfigTableName  string
+	NumOfChannels    int
+	InstanceName     string
+	GCPProjectID     string
+	MaxSessions      uint64
+	MinSessions      uint64
+	MaxCommitDelay   uint64
+	ReplayProtection bool
+	KeyspaceFlatter  bool
 }
 
 type Proxy struct {
@@ -1980,7 +1980,7 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 	var client *spanner.Client
 	var err error
 
-	endpoint := config.SpannerConfig.Endpoint
+	endpoint := config.Endpoint
 
 	if endpoint == "" {
 		client, err = spanner.NewClientWithConfig(ctx, database,
@@ -1990,17 +1990,17 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 	} else {
 		config.Logger.Info("Using Spanner endpoint: " + endpoint)
 
-		if config.SpannerConfig.UsePlainText {
+		if config.UsePlainText {
 			client, err = spanner.NewClientWithConfig(ctx, database,
 				cfg,
 				option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
 				option.WithGRPCDialOption(pool),
-				option.WithEndpoint(config.SpannerConfig.Endpoint),
+				option.WithEndpoint(config.Endpoint),
 				option.WithoutAuthentication(),
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
-			creds, credsErr := utilities.NewCred(config.SpannerConfig.CaCertificate, config.SpannerConfig.ClientCertificate, config.SpannerConfig.ClientKey)
+			creds, credsErr := utilities.NewCred(config.CaCertificate, config.ClientCertificate, config.ClientKey)
 			if credsErr != nil {
 				config.Logger.Error(credsErr.Error())
 				return nil
@@ -2009,7 +2009,7 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 				cfg,
 				option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
 				option.WithGRPCDialOption(pool),
-				option.WithEndpoint(config.SpannerConfig.Endpoint),
+				option.WithEndpoint(config.Endpoint),
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)),
 			)
 		}

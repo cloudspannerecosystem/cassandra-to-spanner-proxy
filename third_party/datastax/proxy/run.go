@@ -57,11 +57,16 @@ type UserConfig struct {
 
 // CassandraToSpannerConfigs contains configurations for Cassandra to Spanner
 type CassandraToSpannerConfigs struct {
-	KeyspaceFlatter bool   `yaml:"keyspaceFlatter"`
-	ProjectID       string `yaml:"projectId"`
-	ConfigTableName string `yaml:"configTableName"`
-	UseRowTTL       bool   `yaml:"useRowTTL"`
-	UseRowTimestamp bool   `yaml:"useRowTimestamp"`
+	KeyspaceFlatter   bool   `yaml:"keyspaceFlatter"`
+	ProjectID         string `yaml:"projectId"`
+	ConfigTableName   string `yaml:"configTableName"`
+	UseRowTTL         bool   `yaml:"useRowTTL"`
+	UseRowTimestamp   bool   `yaml:"useRowTimestamp"`
+	Endpoint          string `yaml:"endpoint"`
+	CaCertificate     string `yaml:"ca_certificate"`
+	ClientCertificate string `yaml:"client_certificate"`
+	ClientKey         string `yaml:"client_key"`
+	UsePlainText      bool   `yaml:"usePlainText"`
 }
 
 // OtelConfig defines the structure of the YAML configuration
@@ -94,17 +99,12 @@ type Listener struct {
 
 // Spanner holds the Spanner database configuration
 type Spanner struct {
-	ProjectID         string    `yaml:"projectId"`
-	InstanceID        string    `yaml:"instanceId"`
-	DatabaseID        string    `yaml:"databaseId"`
-	ConfigTableName   string    `yaml:"configTableName"`
-	Endpoint          string    `yaml:"endpoint"`
-	Session           Session   `yaml:"Session"`
-	Operation         Operation `yaml:"Operation"`
-	CaCertificate     string    `yaml:"ca_certificate"`
-	ClientCertificate string    `yaml:"client_certificate"`
-	ClientKey         string    `yaml:"client_key"`
-	UsePlainText      bool      `yaml:"usePlainText"`
+	ProjectID       string    `yaml:"projectId"`
+	InstanceID      string    `yaml:"instanceId"`
+	DatabaseID      string    `yaml:"databaseId"`
+	ConfigTableName string    `yaml:"configTableName"`
+	Session         Session   `yaml:"Session"`
+	Operation       Operation `yaml:"Operation"`
 }
 
 // Session describes the settings for Spanner sessions
@@ -311,30 +311,30 @@ func Run(ctx context.Context, args []string) int {
 			DC:                cfg.DataCenter,
 			Tokens:            cfg.Tokens,
 			SpannerConfig: SpannerConfig{
-				NumOfChannels:     listener.Spanner.Session.GrpcChannels,
-				ConfigTableName:   listener.Spanner.ConfigTableName,
-				InstanceName:      listener.Spanner.InstanceID,
-				GCPProjectID:      listener.Spanner.ProjectID,
-				Endpoint:          listener.Spanner.Endpoint,
-				DatabaseName:      listener.Spanner.DatabaseID,
-				MaxSessions:       uint64(listener.Spanner.Session.Max),
-				MinSessions:       uint64(listener.Spanner.Session.Min),
-				MaxCommitDelay:    uint64(listener.Spanner.Operation.MaxCommitDelay),
-				ReplayProtection:  listener.Spanner.Operation.ReplayProtection,
-				CaCertificate:     listener.Spanner.CaCertificate,
-				ClientCertificate: listener.Spanner.ClientCertificate,
-				ClientKey:         listener.Spanner.ClientKey,
-				UsePlainText:      listener.Spanner.UsePlainText,
+				NumOfChannels:    listener.Spanner.Session.GrpcChannels,
+				ConfigTableName:  listener.Spanner.ConfigTableName,
+				InstanceName:     listener.Spanner.InstanceID,
+				GCPProjectID:     listener.Spanner.ProjectID,
+				DatabaseName:     listener.Spanner.DatabaseID,
+				MaxSessions:      uint64(listener.Spanner.Session.Max),
+				MinSessions:      uint64(listener.Spanner.Session.Min),
+				MaxCommitDelay:   uint64(listener.Spanner.Operation.MaxCommitDelay),
+				ReplayProtection: listener.Spanner.Operation.ReplayProtection,
 			},
-			Partitioner:     partitioner,
-			ReleaseVersion:  releaseVersion,
-			CQLVersion:      cqlVersion,
-			OtelConfig:      UserConfig.Otel,
-			KeyspaceFlatter: UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter,
-			UseRowTimestamp: UserConfig.CassandraToSpannerConfigs.UseRowTimestamp,
-			UseRowTTL:       UserConfig.CassandraToSpannerConfigs.UseRowTTL,
-			Debug:           cfg.Debug,
-			UserAgent:       "cassandra-adapter/" + proxyReleaseVersion,
+			Partitioner:       partitioner,
+			ReleaseVersion:    releaseVersion,
+			CQLVersion:        cqlVersion,
+			OtelConfig:        UserConfig.Otel,
+			KeyspaceFlatter:   UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter,
+			UseRowTimestamp:   UserConfig.CassandraToSpannerConfigs.UseRowTimestamp,
+			UseRowTTL:         UserConfig.CassandraToSpannerConfigs.UseRowTTL,
+			Debug:             cfg.Debug,
+			UserAgent:         "cassandra-adapter/" + proxyReleaseVersion,
+			Endpoint:          UserConfig.CassandraToSpannerConfigs.Endpoint,
+			CaCertificate:     UserConfig.CassandraToSpannerConfigs.CaCertificate,
+			ClientCertificate: UserConfig.CassandraToSpannerConfigs.ClientCertificate,
+			ClientKey:         UserConfig.CassandraToSpannerConfigs.ClientKey,
+			UsePlainText:      UserConfig.CassandraToSpannerConfigs.UsePlainText,
 		})
 
 		if err1 != nil {
