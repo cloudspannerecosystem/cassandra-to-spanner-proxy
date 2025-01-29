@@ -17,8 +17,6 @@
 package main
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"flag"
 	"fmt"
 	"log"
@@ -34,9 +32,9 @@ import (
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/parser"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -137,33 +135,6 @@ func createSpannerTable(ctx context.Context, queries []string, dbAdminClient *da
 	return nil
 }
 
-// creates credentials for establishing TLS/mTLS connection to external spanner host
-func newCred(ca_certificate, client_certificate, client_key string) (credentials.TransportCredentials, error) {
-	if ca_certificate == "" {
-		return nil, fmt.Errorf("ca_certificate is required to establish TLS/mTLS connection")
-	}
-	caCert, err := os.ReadFile(ca_certificate)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read CA certificate file: %w", err)
-	}
-
-	capool := x509.NewCertPool()
-	if !capool.AppendCertsFromPEM(caCert) {
-		return nil, fmt.Errorf("failed to append the CA certificate to CA pool")
-	}
-	if client_certificate == "" && client_key == "" {
-		return credentials.NewTLS(&tls.Config{RootCAs: capool}), nil
-	}
-	if client_certificate == "" || client_key == "" {
-		return nil, fmt.Errorf("Both client_certificate and client_key to establish mTLS connection")
-	}
-	cert, err := tls.LoadX509KeyPair(client_certificate, client_key)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load client cert and key: %w", err)
-	}
-	return credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{cert}, RootCAs: capool}), nil
-}
-
 func main() {
 	// Define command-line flags for required input parameters
 	projectID := flag.String("project", "", "The project ID")
@@ -235,7 +206,7 @@ func main() {
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
-			creds, credsErr := newCred(*ca_certificate, *client_certificate, *client_key)
+			creds, credsErr := utilities.NewCred(*ca_certificate, *client_certificate, *client_key)
 			if credsErr != nil {
 				log.Fatalf("%v", credsErr)
 			}
@@ -291,7 +262,7 @@ func main() {
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
-			creds, credsErr := newCred(*ca_certificate, *client_certificate, *client_key)
+			creds, credsErr := utilities.NewCred(*ca_certificate, *client_certificate, *client_key)
 			if credsErr != nil {
 				log.Fatalf("%v", credsErr)
 			}

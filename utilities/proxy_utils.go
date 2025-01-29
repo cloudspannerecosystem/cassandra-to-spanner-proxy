@@ -17,7 +17,10 @@
 package utilities
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -31,6 +34,7 @@ import (
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
@@ -484,4 +488,31 @@ func getSystemSchemaRawCachedValues(hdr *frame.Header, s [][]interface{}) ([]mes
 		data[i] = dataRow
 	}
 	return data, nil
+}
+
+// creates credentials for establishing TLS/mTLS connection to external spanner host
+func NewCred(ca_certificate, client_certificate, client_key string) (credentials.TransportCredentials, error) {
+	if ca_certificate == "" {
+		return nil, fmt.Errorf("ca_certificate is required to establish TLS/mTLS connection")
+	}
+	caCert, err := os.ReadFile(ca_certificate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CA certificate file: %w", err)
+	}
+
+	capool := x509.NewCertPool()
+	if !capool.AppendCertsFromPEM(caCert) {
+		return nil, fmt.Errorf("failed to append the CA certificate to CA pool")
+	}
+	if client_certificate == "" && client_key == "" {
+		return credentials.NewTLS(&tls.Config{RootCAs: capool}), nil
+	}
+	if client_certificate == "" || client_key == "" {
+		return nil, fmt.Errorf("Both client_certificate and client_key to establish mTLS connection")
+	}
+	cert, err := tls.LoadX509KeyPair(client_certificate, client_key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load client cert and key: %w", err)
+	}
+	return credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{cert}, RootCAs: capool}), nil
 }
