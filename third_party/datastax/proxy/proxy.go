@@ -1977,9 +1977,6 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 
 	database := fmt.Sprintf(SpannerConnectionString, config.SpannerConfig.GCPProjectID, config.SpannerConfig.InstanceName, config.SpannerConfig.DatabaseName)
 
-	var client *spanner.Client
-	var err error
-
 	endpoint := config.Endpoint
 
 	opts := []option.ClientOption{
@@ -2005,7 +2002,7 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 		opts = append(opts, option.WithGRPCDialOption(pool))
 	}
 
-	client, err = spanner.NewClientWithConfig(ctx, database, cfg, opts...)
+	client, err := spanner.NewClientWithConfig(ctx, database, cfg, opts...)
 
 	// Create the Spanner client
 	if err != nil {

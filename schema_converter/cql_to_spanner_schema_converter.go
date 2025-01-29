@@ -191,10 +191,6 @@ func main() {
 	// Construct the Spanner database path
 	db := fmt.Sprintf("projects/%s/instances/%s/databases/%s", *projectID, *instanceID, *databaseID)
 
-	// Create a Spanner Database Admin client
-	var adminClient *database.DatabaseAdminClient
-	var err error
-
 	opts := []option.ClientOption{}
 	if *endpoint != "" {
 		opts = append(opts, option.WithEndpoint(*endpoint))
@@ -210,7 +206,8 @@ func main() {
 		}
 
 	}
-	adminClient, err = database.NewDatabaseAdminClient(ctx, opts...)
+	// Create a Spanner Database Admin client
+	adminClient, err := database.NewDatabaseAdminClient(ctx, opts...)
 	if err != nil {
 		log.Fatalf("Failed to create admin client: %v", err)
 	}
@@ -245,8 +242,7 @@ func main() {
 	}
 
 	// Create a Spanner client to interact with the database
-	var spannerClient *spanner.Client
-	spannerClient, err = spanner.NewClient(ctx, db, opts...)
+	spannerClient, err := spanner.NewClient(ctx, db, opts...)
 	if err != nil {
 		log.Fatalf("Failed to create spanner client: %v", err)
 	}
