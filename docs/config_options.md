@@ -42,6 +42,21 @@ listeners:
 
         # [Optional] - Global else default to TableConfigurations
         configTableName: TableConfigurations
+   
+        # [Optional] endpoint configuration for spanner
+        endpoint: YOUR_ENDPOINT
+      
+        # [Optional] If set to True, will connect to endpoint over plain text
+        usePlainText : False
+        
+        # [Optional] CA certificate path for TLS/mTLS configuration
+        ca_certificate : PATH/TO/CA_CERTIFICATE
+        
+        # [Optional] client certificate path for mTLS configuration
+        client_certificate : PATH/TO/CLIENT_CERTIFICATE
+        
+        # [Optional] client key path for mTLS configuration
+        client_key : PATH/TO/CLIENT_KEY
 
         Session:
             # Minimum number of sessions that Spanner pool will always maintain.

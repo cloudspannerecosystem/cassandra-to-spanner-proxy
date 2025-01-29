@@ -19,12 +19,13 @@ import (
 	"context"
 	"crypto"
 	"crypto/md5"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"net"
-	"net/url"
 	"os"
 	"reflect"
 	"sync"
@@ -50,6 +51,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -148,17 +150,21 @@ type Config struct {
 }
 
 type SpannerConfig struct {
-	DatabaseName     string
-	ConfigTableName  string
-	NumOfChannels    int
-	InstanceName     string
-	GCPProjectID     string
-	Endpoint         string
-	MaxSessions      uint64
-	MinSessions      uint64
-	MaxCommitDelay   uint64
-	ReplayProtection bool
-	KeyspaceFlatter  bool
+	DatabaseName      string
+	ConfigTableName   string
+	NumOfChannels     int
+	InstanceName      string
+	GCPProjectID      string
+	Endpoint          string
+	MaxSessions       uint64
+	MinSessions       uint64
+	MaxCommitDelay    uint64
+	ReplayProtection  bool
+	KeyspaceFlatter   bool
+	CaCertificate     string
+	ClientCertificate string
+	ClientKey         string
+	UsePlainText      bool
 }
 
 type Proxy struct {
@@ -1922,6 +1928,33 @@ func (sc *SpannerClient) GetClient(ctx context.Context) (*spanner.Client, error)
 	return sc.Client, nil
 }
 
+// creates credentials for establishing TLS/mTLS connection to external spanner host
+func newCred(ca_certificate, client_certificate, client_key string) (credentials.TransportCredentials, error) {
+	if ca_certificate == "" {
+		return nil, fmt.Errorf("ca_certificate is required to establish TLS/mTLS connection")
+	}
+	caCert, err := os.ReadFile(ca_certificate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CA certificate file: %w", err)
+	}
+
+	capool := x509.NewCertPool()
+	if !capool.AppendCertsFromPEM(caCert) {
+		return nil, fmt.Errorf("failed to append the CA certificate to CA pool")
+	}
+	if client_certificate == "" && client_key == "" {
+		return credentials.NewTLS(&tls.Config{RootCAs: capool}), nil
+	}
+	if client_certificate == "" || client_key == "" {
+		return nil, fmt.Errorf("Both client_certificate and client_key to establish mTLS connection")
+	}
+	cert, err := tls.LoadX509KeyPair(client_certificate, client_key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load client cert and key: %w", err)
+	}
+	return credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{cert}, RootCAs: capool}), nil
+}
+
 // NewSpannerClient creates a new instance of SpannerClient
 var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenTelemetry) iface.SpannerClientInterface {
 	// Check the environment variables for the Spanner emulator.
@@ -1979,18 +2012,15 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 
 	endpoint := config.SpannerConfig.Endpoint
 
-	if endpoint == "YOUR_ENDPOINT" || endpoint == "" {
+	if endpoint == "" {
 		client, err = spanner.NewClientWithConfig(ctx, database,
 			cfg,
 			option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
 			option.WithGRPCDialOption(pool))
 	} else {
-		parsedURL, err := url.Parse(endpoint)
-		if err != nil {
-			config.Logger.Error("Failed parsing spanner:endpoint" + err.Error())
-			return nil
-		}
-		if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		config.Logger.Info("Using Spanner endpoint: " + endpoint)
+
+		if config.SpannerConfig.UsePlainText {
 			client, err = spanner.NewClientWithConfig(ctx, database,
 				cfg,
 				option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
@@ -2000,11 +2030,17 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
+			creds, credsErr := newCred(config.SpannerConfig.CaCertificate, config.SpannerConfig.ClientCertificate, config.SpannerConfig.ClientKey)
+			if credsErr != nil {
+				config.Logger.Error(credsErr.Error())
+				return nil
+			}
 			client, err = spanner.NewClientWithConfig(ctx, database,
 				cfg,
 				option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
 				option.WithGRPCDialOption(pool),
 				option.WithEndpoint(config.SpannerConfig.Endpoint),
+				option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)),
 			)
 		}
 	}

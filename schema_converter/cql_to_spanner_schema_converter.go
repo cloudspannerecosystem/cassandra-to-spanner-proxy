@@ -17,6 +17,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
 	"log"
@@ -32,6 +34,10 @@ import (
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/parser"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -135,11 +141,39 @@ func createSpannerTable(ctx context.Context, queries []string, dbAdminClient *da
 	return nil
 }
 
+// creates credentials for establishing TLS/mTLS connection to external spanner host
+func newCred(ca_certificate, client_certificate, client_key string) (credentials.TransportCredentials, error) {
+	if ca_certificate == "" {
+		return nil, fmt.Errorf("ca_certificate is required to establish TLS/mTLS connection")
+	}
+	caCert, err := os.ReadFile(ca_certificate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CA certificate file: %w", err)
+	}
+
+	capool := x509.NewCertPool()
+	if !capool.AppendCertsFromPEM(caCert) {
+		return nil, fmt.Errorf("failed to append the CA certificate to CA pool")
+	}
+	if client_certificate == "" && client_key == "" {
+		return credentials.NewTLS(&tls.Config{RootCAs: capool}), nil
+	}
+	if client_certificate == "" || client_key == "" {
+		return nil, fmt.Errorf("Both client_certificate and client_key to establish mTLS connection")
+	}
+	cert, err := tls.LoadX509KeyPair(client_certificate, client_key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load client cert and key: %w", err)
+	}
+	return credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{cert}, RootCAs: capool}), nil
+}
+
 func main() {
 	// Define command-line flags for required input parameters
 	projectID := flag.String("project", "", "The project ID")
 	instanceID := flag.String("instance", "", "The Spanner instance ID")
 	databaseID := flag.String("database", "", "The Spanner database ID")
+	endpoint := flag.String("endpoint", "", "The Spanner External Host")
 	endpoint := flag.String("endpoint", "", "The Spanner External Host")
 	cqlFile := flag.String("cql", "", "Path to the CQL file")
 	keyspaceFlatter := flag.Bool("keyspaceFlatter", false, "Whether to enable keyspace flattening (default: false)")
@@ -147,7 +181,10 @@ func main() {
 	enableUsingTimestamp := flag.Bool("enableUsingTimestamp", false, "Whether to enable using timestamp (default: false)")
 	enableUsingTTL := flag.Bool("enableUsingTTL", false, "Whether to enable TTL (default: false)")
 	usePlainText := flag.Bool("usePlainText", false, "Whether to use plain text to establish connection")
-	ca_certificate_file := flag.String("ca_certificate_file", "", "The CA certificate file to use for TLS")
+	ca_certificate := flag.String("ca_certificate", "", "The CA certificate file to use for TLS")
+	client_certificate := flag.String("client_certificate", "", "The client certificate to establish mTLS for external hosts")
+	client_key := flag.String("client_key", "", "The client key to establish mTLS for external hosts")
+
 	flag.Parse()
 
 	// Check if all required flags are provided
@@ -181,6 +218,11 @@ func main() {
 		if err := checkGCPCredentials(); err != nil {
 			log.Fatalf("Error: %v", err)
 		}
+	// Ensure that GCP credentials are set except for spanner external host connections
+	if *endpoint == "" {
+		if err := checkGCPCredentials(); err != nil {
+			log.Fatalf("Error: %v", err)
+		}
 	}
 
 	ctx := context.Background()
@@ -203,12 +245,9 @@ func main() {
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
-			if *ca_certificate_file == "" {
-				log.Fatalf("ca_certificate_file required for TLS connection on spanner endpoint: %v", err)
-			}
-			creds, credsErr := credentials.NewClientTLSFromFile(*ca_certificate_file, "")
+			creds, credsErr := newCred(*ca_certificate, *client_certificate, *client_key)
 			if credsErr != nil {
-				log.Fatalf("Error in provided ca_client_certificate : %v", err)
+				log.Fatalf("%v", credsErr)
 			}
 			adminClient, err = database.NewDatabaseAdminClient(
 				ctx,
@@ -216,7 +255,6 @@ func main() {
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)),
 			)
 		}
-
 	}
 	if err != nil {
 		log.Fatalf("Failed to create admin client: %v", err)
@@ -258,17 +296,14 @@ func main() {
 	} else {
 		if *usePlainText {
 			spannerClient, err = spanner.NewClient(ctx, db,
-				option.WithEndpoint("localhost:15000"),
+				option.WithEndpoint(*endpoint),
 				option.WithoutAuthentication(),
 				option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 			)
 		} else {
-			if *ca_certificate_file == "" {
-				log.Fatalf("ca_certificate_file required for TLS connection on spanner endpoint: %v", err)
-			}
-			creds, credsErr := credentials.NewClientTLSFromFile(*ca_certificate_file, "")
+			creds, credsErr := newCred(*ca_certificate, *client_certificate, *client_key)
 			if credsErr != nil {
-				log.Fatalf("Error in provided ca_client_certificate : %v", err)
+				log.Fatalf("%v", credsErr)
 			}
 			spannerClient, err = spanner.NewClient(ctx, db,
 				option.WithEndpoint(*endpoint),
