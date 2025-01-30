@@ -137,6 +137,8 @@ otel:
     enabled: False
     # Health check endpoint for the OTEL collector service
     endpoint: YOUR_OTEL_COLLECTOR_HEALTHCHECK_ENDPOINT
+    # Whether or not to disable generating random service instance id key, Default 'False'.
+    disableRandomServiceInstanceIDKey: False
   metrics:
     # Enable/Disable metrics, Default 'False'.
     enabled: False

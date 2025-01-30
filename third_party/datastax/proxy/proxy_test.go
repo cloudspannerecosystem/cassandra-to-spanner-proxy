@@ -174,7 +174,7 @@ func TestNewProxyWithOtel(t *testing.T) {
 	proxyConfig.OtelConfig.Metrics.Endpoint = "http://localhost:7061"
 	proxyConfig.OtelConfig.ServiceName = "test"
 	proxyConfig.OtelConfig.Traces.SamplingRatio = 1.0
-	proxyConfig.OtelConfig.ServiceInstanceIDKey = "test-key"
+	proxyConfig.OtelConfig.DisableRandomServiceInstanceIDKey = true
 
 	srv1 := setupTestEndpoint(":7060", "/trace")
 	srv2 := setupTestEndpoint(":7061", "/metric")

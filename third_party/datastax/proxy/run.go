@@ -82,7 +82,7 @@ type OtelConfig struct {
 		Endpoint      string  `yaml:"endpoint"`
 		SamplingRatio float64 `yaml:"samplingRatio"`
 	} `yaml:"traces"`
-	ServiceInstanceIDKey string `yaml:"serviceInstanceIDKey"`
+	DisableRandomServiceInstanceIDKey bool `yaml:"disableRandomServiceInstanceIDKey"`
 }
 
 // Listener represents each listener configuration
