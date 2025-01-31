@@ -69,18 +69,19 @@ type TelemetryInitializer interface {
 
 // OTelConfig holds configuration for OpenTelemetry.
 type OTelConfig struct {
-	TraceEnabled       bool
-	MetricEnabled      bool
-	TracerEndpoint     string
-	MetricEndpoint     string
-	ServiceName        string
-	TraceSampleRatio   float64
-	OTELEnabled        bool
-	Database           string
-	Instance           string
-	HealthCheckEnabled bool
-	HealthCheckEp      string
-	ServiceVersion     string
+	TraceEnabled                      bool
+	MetricEnabled                     bool
+	TracerEndpoint                    string
+	MetricEndpoint                    string
+	ServiceName                       string
+	TraceSampleRatio                  float64
+	OTELEnabled                       bool
+	Database                          string
+	Instance                          string
+	HealthCheckEnabled                bool
+	HealthCheckEp                     string
+	ServiceVersion                    string
+	DisableRandomServiceInstanceIDKey bool
 }
 
 const (
@@ -247,31 +248,29 @@ func (o *OpenTelemetry) InitMeterProvider(ctx context.Context, resource *resourc
 
 // Function to create otel resource.
 func (o *OpenTelemetry) createResource(ctx context.Context) *resource.Resource {
+	attrs := []attribute.KeyValue{
+		semconv.ServiceNameKey.String(o.Config.ServiceName),
+		semconv.ServiceVersionKey.String(o.Config.ServiceVersion),
+	}
+
+	if !o.Config.DisableRandomServiceInstanceIDKey {
+		attrs = append(attrs, semconv.ServiceInstanceIDKey.String(uuid.New().String()))
+	}
+
 	res, err := resource.New(ctx,
 		resource.WithSchemaURL(semconv.SchemaURL),
-		// Use the GCP resource detector!
 		resource.WithDetectors(gcp.NewDetector()),
-		// Keep the default detectors
 		resource.WithTelemetrySDK(),
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String(o.Config.ServiceName),
-			semconv.ServiceInstanceIDKey.String(uuid.New().String()),
-			semconv.ServiceVersionKey.String(o.Config.ServiceVersion),
-		),
-	)
+		resource.WithAttributes(attrs...))
 
 	if err != nil {
 		// Default resource
 		return resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(o.Config.ServiceName),
-			semconv.ServiceInstanceIDKey.String(uuid.New().String()),
-			semconv.ServiceVersionKey.String(o.Config.ServiceVersion),
+			attrs...,
 		)
 	}
-
 	return res
-
 }
 
 // CreateTrace starts a new trace span based on provided context, name, attributes, and error.

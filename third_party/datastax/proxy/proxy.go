@@ -222,18 +222,19 @@ func NewProxy(ctx context.Context, config Config) (*Proxy, error) {
 	// Initialize OpenTelemetry
 	if config.OtelConfig.Enabled {
 		otelInit = &otelgo.OTelConfig{
-			TraceEnabled:       config.OtelConfig.Traces.Enabled,
-			MetricEnabled:      config.OtelConfig.Metrics.Enabled,
-			TracerEndpoint:     config.OtelConfig.Traces.Endpoint,
-			MetricEndpoint:     config.OtelConfig.Metrics.Endpoint,
-			ServiceName:        config.OtelConfig.ServiceName,
-			OTELEnabled:        config.OtelConfig.Enabled,
-			TraceSampleRatio:   config.OtelConfig.Traces.SamplingRatio,
-			Database:           config.SpannerConfig.DatabaseName,
-			Instance:           config.SpannerConfig.InstanceName,
-			HealthCheckEnabled: config.OtelConfig.HealthCheck.Enabled,
-			HealthCheckEp:      config.OtelConfig.HealthCheck.Endpoint,
-			ServiceVersion:     config.Version.String(),
+			TraceEnabled:                      config.OtelConfig.Traces.Enabled,
+			MetricEnabled:                     config.OtelConfig.Metrics.Enabled,
+			TracerEndpoint:                    config.OtelConfig.Traces.Endpoint,
+			MetricEndpoint:                    config.OtelConfig.Metrics.Endpoint,
+			ServiceName:                       config.OtelConfig.ServiceName,
+			OTELEnabled:                       config.OtelConfig.Enabled,
+			TraceSampleRatio:                  config.OtelConfig.Traces.SamplingRatio,
+			Database:                          config.SpannerConfig.DatabaseName,
+			Instance:                          config.SpannerConfig.InstanceName,
+			HealthCheckEnabled:                config.OtelConfig.HealthCheck.Enabled,
+			HealthCheckEp:                     config.OtelConfig.HealthCheck.Endpoint,
+			ServiceVersion:                    config.Version.String(),
+			DisableRandomServiceInstanceIDKey: config.OtelConfig.DisableRandomServiceInstanceIDKey,
 		}
 
 		otelInst, shutdownOTel, err = otelgo.NewOpenTelemetry(ctx, otelInit, config.Logger)

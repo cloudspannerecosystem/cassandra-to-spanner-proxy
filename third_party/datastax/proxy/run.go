@@ -82,6 +82,7 @@ type OtelConfig struct {
 		Endpoint      string  `yaml:"endpoint"`
 		SamplingRatio float64 `yaml:"samplingRatio"`
 	} `yaml:"traces"`
+	DisableRandomServiceInstanceIDKey bool `yaml:"disableRandomServiceInstanceIDKey"`
 }
 
 // Listener represents each listener configuration
@@ -255,7 +256,7 @@ func Run(ctx context.Context, args []string) int {
 	}
 	defer logger.Sync()
 	if cfg.Version {
-		cliCtx.Printf("Version - " + proxyReleaseVersion)
+		cliCtx.Printf("Version - %s", proxyReleaseVersion)
 		return 0
 	}
 
