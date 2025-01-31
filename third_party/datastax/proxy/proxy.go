@@ -1996,8 +1996,6 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 			}
 			opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)))
 		}
-	} else {
-		opts = append(opts, option.WithGRPCDialOption(pool))
 	}
 
 	client, err := spanner.NewClientWithConfig(ctx, database, cfg, opts...)
