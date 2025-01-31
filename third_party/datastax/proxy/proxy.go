@@ -49,6 +49,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -137,12 +138,17 @@ type Config struct {
 	CQLVersion        string
 	// PreparedCache a cache that stores prepared queries. If not set it uses the default implementation with a max
 	// capacity of ~100MB.
-	PreparedCache   proxycore.PreparedCache
-	KeyspaceFlatter bool
-	UseRowTimestamp bool
-	UseRowTTL       bool
-	Debug           bool
-	UserAgent       string
+	PreparedCache     proxycore.PreparedCache
+	KeyspaceFlatter   bool
+	UseRowTimestamp   bool
+	UseRowTTL         bool
+	Debug             bool
+	UserAgent         string
+	Endpoint          string
+	CaCertificate     string
+	ClientCertificate string
+	ClientKey         string
+	UsePlainText      bool
 }
 
 type SpannerConfig struct {
@@ -1971,10 +1977,30 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 	}
 
 	database := fmt.Sprintf(SpannerConnectionString, config.SpannerConfig.GCPProjectID, config.SpannerConfig.InstanceName, config.SpannerConfig.DatabaseName)
-	client, err := spanner.NewClientWithConfig(ctx, database,
-		cfg,
+
+	opts := []option.ClientOption{
 		option.WithGRPCConnectionPool(config.SpannerConfig.NumOfChannels),
-		option.WithGRPCDialOption(pool))
+		option.WithGRPCDialOption(pool),
+	}
+
+	if config.Endpoint != "" {
+		config.Logger.Info("Using Spanner endpoint: " + config.Endpoint)
+		opts = append(opts, option.WithEndpoint(config.Endpoint))
+		if config.UsePlainText {
+			opts = append(opts, option.WithoutAuthentication())
+			opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+		} else {
+			creds, credsErr := utilities.NewCred(config.CaCertificate, config.ClientCertificate, config.ClientKey)
+			if credsErr != nil {
+				config.Logger.Error(credsErr.Error())
+				return nil
+			}
+			opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(creds)))
+		}
+	}
+
+	client, err := spanner.NewClientWithConfig(ctx, database, cfg, opts...)
+
 	// Create the Spanner client
 	if err != nil {
 		config.Logger.Error("Failed to create client" + err.Error())

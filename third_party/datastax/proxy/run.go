@@ -57,11 +57,16 @@ type UserConfig struct {
 
 // CassandraToSpannerConfigs contains configurations for Cassandra to Spanner
 type CassandraToSpannerConfigs struct {
-	KeyspaceFlatter bool   `yaml:"keyspaceFlatter"`
-	ProjectID       string `yaml:"projectId"`
-	ConfigTableName string `yaml:"configTableName"`
-	UseRowTTL       bool   `yaml:"useRowTTL"`
-	UseRowTimestamp bool   `yaml:"useRowTimestamp"`
+	KeyspaceFlatter   bool   `yaml:"keyspaceFlatter"`
+	ProjectID         string `yaml:"projectId"`
+	ConfigTableName   string `yaml:"configTableName"`
+	UseRowTTL         bool   `yaml:"useRowTTL"`
+	UseRowTimestamp   bool   `yaml:"useRowTimestamp"`
+	Endpoint          string `yaml:"endpoint"`
+	CaCertificate     string `yaml:"caCertificate"`
+	ClientCertificate string `yaml:"clientCertificate"`
+	ClientKey         string `yaml:"clientKey"`
+	UsePlainText      bool   `yaml:"usePlainText"`
 }
 
 // OtelConfig defines the structure of the YAML configuration
@@ -317,15 +322,20 @@ func Run(ctx context.Context, args []string) int {
 				MaxCommitDelay:   uint64(listener.Spanner.Operation.MaxCommitDelay),
 				ReplayProtection: listener.Spanner.Operation.ReplayProtection,
 			},
-			Partitioner:     partitioner,
-			ReleaseVersion:  releaseVersion,
-			CQLVersion:      cqlVersion,
-			OtelConfig:      UserConfig.Otel,
-			KeyspaceFlatter: UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter,
-			UseRowTimestamp: UserConfig.CassandraToSpannerConfigs.UseRowTimestamp,
-			UseRowTTL:       UserConfig.CassandraToSpannerConfigs.UseRowTTL,
-			Debug:           cfg.Debug,
-			UserAgent:       "cassandra-adapter/" + proxyReleaseVersion,
+			Partitioner:       partitioner,
+			ReleaseVersion:    releaseVersion,
+			CQLVersion:        cqlVersion,
+			OtelConfig:        UserConfig.Otel,
+			KeyspaceFlatter:   UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter,
+			UseRowTimestamp:   UserConfig.CassandraToSpannerConfigs.UseRowTimestamp,
+			UseRowTTL:         UserConfig.CassandraToSpannerConfigs.UseRowTTL,
+			Debug:             cfg.Debug,
+			UserAgent:         "cassandra-adapter/" + proxyReleaseVersion,
+			Endpoint:          UserConfig.CassandraToSpannerConfigs.Endpoint,
+			CaCertificate:     UserConfig.CassandraToSpannerConfigs.CaCertificate,
+			ClientCertificate: UserConfig.CassandraToSpannerConfigs.ClientCertificate,
+			ClientKey:         UserConfig.CassandraToSpannerConfigs.ClientKey,
+			UsePlainText:      UserConfig.CassandraToSpannerConfigs.UsePlainText,
 		})
 
 		if err1 != nil {

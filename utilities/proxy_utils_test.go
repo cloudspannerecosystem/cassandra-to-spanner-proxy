@@ -22,11 +22,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 	"github.com/datastax/go-cassandra-native-protocol/datatype"
 	"github.com/datastax/go-cassandra-native-protocol/frame"
 	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 	"github.com/tj/assert"
+	"google.golang.org/grpc/credentials"
 )
 
 func jsonEqual(a, b string) bool {
@@ -689,6 +690,73 @@ func TestGetSystemSchemaRawCachedValues(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestNewCred(t *testing.T) {
+	tests := []struct {
+		name           string
+		caCertPath     string
+		clientCertPath string
+		clientKeyPath  string
+		wantErr        bool
+	}{
+		{
+			name:           "Missing CA certificate",
+			caCertPath:     "",
+			clientCertPath: "",
+			clientKeyPath:  "",
+			wantErr:        true,
+		},
+		{
+			name:           "Invalid CA certificate path",
+			caCertPath:     "invalid/path/to/ca.crt",
+			clientCertPath: "",
+			clientKeyPath:  "",
+			wantErr:        true,
+		},
+		{
+			name:           "mTLS: Missing client key",
+			caCertPath:     "testdata/ca.crt",
+			clientCertPath: "testdata/client.crt",
+			clientKeyPath:  "",
+			wantErr:        true,
+		},
+		{
+			name:           "mTLS: Missing client cert",
+			caCertPath:     "testdata/ca.crt",
+			clientCertPath: "",
+			clientKeyPath:  "testdata/client.key",
+			wantErr:        true,
+		},
+		{
+			name:           "TLS: Valid CA certificate",
+			caCertPath:     "testdata/ca.crt",
+			clientCertPath: "",
+			clientKeyPath:  "",
+			wantErr:        false,
+		},
+		{
+			name:           "mTLS: Valid CA, client cert, and key",
+			caCertPath:     "testdata/ca.crt",
+			clientCertPath: "testdata/client.crt",
+			clientKeyPath:  "testdata/client.key",
+			wantErr:        false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cred, err := NewCred(tt.caCertPath, tt.clientCertPath, tt.clientKeyPath)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cred)
+				_, ok := cred.(credentials.TransportCredentials)
+				assert.True(t, ok, "Expected TransportCredentials")
 			}
 		})
 	}
