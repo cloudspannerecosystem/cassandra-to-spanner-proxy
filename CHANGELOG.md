@@ -1,5 +1,11 @@
 # Changelog
 
+# [1.0.4] - 2025-02-03
+
+### Features
+* Allow users to disable the generation of a random service instance ID key for Otel.
+* Support external host connections to the Spanner endpoint over plaintext, TLS, and mTLS in the Cassandra proxy adapter.
+
 # [1.0.3] - 2025-01-24
 
 ### Features
