@@ -72,6 +72,9 @@ const (
 	NotFoundOnSpanner             = "Inserted Rows not found in spanner"
 	ErrorWhileFetchingFromSpanner = "Error while fetching data from Spanner: %v"
 	largestTimeStampMismatchError = "largest timestamp is not matching"
+	BatchCommit                   = "Commit"
+	BatchDML                      = "BatchDML"
+	BatchMixed                    = ""
 )
 
 var SCHEMAFILE embed.FS
@@ -1034,11 +1037,12 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 			queries[i] = query
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with same PK: %v", err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithSamePK")
+			assert.Equal(t, BatchCommit, batchQueryType)
 		}
 
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_1' and `upload_time`= 5000000;")
@@ -1079,11 +1083,12 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 			queries[i] = query
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with different PK: %v", err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithDifferentPK")
+			assert.Equal(t, BatchCommit, batchQueryType)
 		}
 
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='diff_pk_1' order by upload_time;")
@@ -1118,11 +1123,12 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 			},
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for range delete: %v", err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: RangeDelete")
+			assert.Equal(t, BatchDML, batchQueryType)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='diff_pk_1' order by upload_time;")
@@ -1169,7 +1175,7 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 	// 		queries = append(queries, query)
 	// 	}
 
-	// 	result, err := sc.FilterAndExecuteBatch(ctx, queries)
+	// 	result, batchQueryType,  err := sc.FilterAndExecuteBatch(ctx, queries)
 	// 	if err != nil {
 	// 		t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 	// 	} else {
@@ -1230,11 +1236,12 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 			queries = append(queries, query)
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with same PK: %v", err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithSamePK")
+			assert.Equal(t, BatchDML, batchQueryType)
 		}
 
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_1';")
@@ -1289,11 +1296,12 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDelete")
+			assert.Equal(t, BatchDML, batchQueryType)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='diff_pk_2' order by upload_time;")
@@ -1336,11 +1344,12 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertWithSamePKFollowedByDelete")
+			assert.Equal(t, BatchDML, batchQueryType)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_5' order by upload_time;")
@@ -1372,7 +1381,7 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			}
 			queries = append(queries, query)
 		}
-		_, err := sc.FilterAndExecuteBatch(ctx, queries)
+		_, _, err := sc.FilterAndExecuteBatch(ctx, queries)
 		assert.Error(t, fmt.Errorf("failed to filter queries: last_commit_ts is not a time.Time value"), err, "MultipleInsertWithSamePKFollowedByDeleteError should fail")
 	})
 
@@ -1412,11 +1421,12 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDeleteOnSamePK")
+			assert.Equal(t, BatchDML, batchQueryType)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_7X' order by upload_time;")
@@ -1466,11 +1476,12 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDeleteOnDifferentPK")
+			assert.Equal(t, BatchDML, batchQueryType)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='diff_pk_7X' order by upload_time;")
@@ -1534,11 +1545,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKCase1")
+			assert.Equal(t, BatchDML, batchQueryType)
 		}
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_9' order by upload_time;")
 		assert.Error(t, fmt.Errorf("no rows found"), err, "all rows should have deleted for AllOperationWithSamePKCase1")
@@ -1611,11 +1623,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			PrimaryKeys:  []string{"user_id"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKey")
+			assert.Equal(t, BatchMixed, batchQueryType)
 		}
 		_, err = getDataFromSpanner(ctx, sc.Client, fmt.Sprintf("select * from %s WHERE `user_id`='same_pk_10';", TABLE_ADDRESS))
 		assert.Error(t, fmt.Errorf("no rows found"), err, "all rows should have deleted for AllOperationWithSamePKUpdateMapByKey")
@@ -1688,11 +1701,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, BatchMixed, batchQueryType)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_11';")
 		if err != nil {
@@ -1778,11 +1792,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase3")
+			assert.Equal(t, BatchMixed, batchQueryType)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_12';")
 		if err != nil {
@@ -1862,11 +1877,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			})
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, BatchMixed, batchQueryType)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_13';")
 		if err != nil {
@@ -1919,11 +1935,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			})
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, batchQueryType, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, BatchMixed, batchQueryType)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_13';")
 		if err != nil {

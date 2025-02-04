@@ -1032,7 +1032,6 @@ func (c *client) handleBatch(raw *frame.RawFrame, msg *partialBatch) {
 	})
 	defer c.proxy.otelInst.EndSpan(span)
 	var otelErr error
-	defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleBatch, startTime, handleBatch, otelErr)
 
 	for index, queryId := range msg.queryOrIds {
 		queryOrId, ok := queryId.([]byte)
@@ -1099,7 +1098,8 @@ func (c *client) handleBatch(raw *frame.RawFrame, msg *partialBatch) {
 			c.proxy.logger.Error(otelErr.Error())
 		}
 	}
-	result, err := c.proxy.sClient.FilterAndExecuteBatch(otelCtx, batchQueries)
+	result, batchQueryType, err := c.proxy.sClient.FilterAndExecuteBatch(otelCtx, batchQueries)
+	defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleBatch, startTime, batchQueryType, otelErr)
 	if err != nil {
 		c.proxy.logger.Error(errorAtSpanner, zap.Error(err))
 		c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})

@@ -116,33 +116,44 @@ func (_m *SpannerClientIface) DeleteUsingMutations(ctx context.Context, query re
 }
 
 // FilterAndExecuteBatch provides a mock function with given fields: ctx, queries
-func (_m *SpannerClientIface) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (_m *SpannerClientIface) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	ret := _m.Called(ctx, queries)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FilterAndExecuteBatch")
+			panic("no return value specified for FilterAndExecuteBatch")
 	}
 
 	var r0 *message.RowsResult
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) (*message.RowsResult, error)); ok {
-		return rf(ctx, queries)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) *message.RowsResult); ok {
-		r0 = rf(ctx, queries)
+	var r1 string  
+	var r2 error  
+
+	if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) (*message.RowsResult, string, error)); ok {
+			r0, r1, r2 = rf(ctx, queries) 
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*message.RowsResult)
-		}
+			if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) *message.RowsResult); ok {
+					r0 = rf(ctx, queries)
+			} else {
+					if ret.Get(0) != nil {
+							r0 = ret.Get(0).(*message.RowsResult)
+					}
+			}
+
+			if rf, ok := ret.Get(1).(func(context.Context, []*responsehandler.QueryMetadata) string); ok { // Add this block for string
+					r1 = rf(ctx, queries)
+			} else {
+					if ret.Get(1) != nil {
+							r1 = ret.Get(1).(string)
+					}
+			}
+			if rf, ok := ret.Get(2).(func(context.Context, []*responsehandler.QueryMetadata) error); ok { // Adjust index to 2.
+					r2 = rf(ctx, queries)
+			} else {
+					r2 = ret.Error(2) 
+			}
+
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []*responsehandler.QueryMetadata) error); ok {
-		r1 = rf(ctx, queries)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0, r1, r2 
 }
 
 // GetTableConfigs provides a mock function with given fields: ctx, query
