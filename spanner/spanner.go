@@ -73,6 +73,13 @@ const (
 	regular                       = "regular"
 )
 
+const (
+	CommitAPI          = "Commit"
+	ExecuteBatchDMLAPI = "ExecuteBatchDML"
+	ExecuteSqlAPI      = "ExecuteSql"
+	UnknownOrMixedAPI  = ""
+)
+
 type SpannerClientIface interface {
 	SelectStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
 	InsertUpdateOrDeleteStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
@@ -709,7 +716,7 @@ func updateMapWithNewValues(mapValue map[string]bool, query *responsehandler.Que
 
 func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	otelgo.AddAnnotation(ctx, FilterAndExecuteBatch)
-	batchQueryType := ""
+	spannerAPI := ""
 	_, err := sc.Client.ReadWriteTransactionWithOptions(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		filteredResponse, err := sc.filterBatch(ctx, txn, queries)
 		if err != nil {
@@ -732,7 +739,7 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 				if err := txn.BufferWrite(ms); err != nil {
 					return fmt.Errorf("failed to buffer write mutations: %w", err)
 				}
-				batchQueryType = "Commit"
+				spannerAPI = CommitAPI
 			}
 
 			sc.Logger.Debug("Executing Statements from the filtered batch", zap.Int("statementCount", len(stmts)))
@@ -744,11 +751,11 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 				otelgo.AddAnnotationWithAttr(ctx, "Executed Batch Update", []attribute.KeyValue{
 					attribute.Int("Row Count", len(rowCounts)),
 				})
-				if batchQueryType == "Commit" {
+				if spannerAPI == CommitAPI {
 					// TODO: refactor current implementation to only use commit or DML, but not both.
-					batchQueryType = ""
+					spannerAPI = UnknownOrMixedAPI
 				} else {
-					batchQueryType = "BatchDML"
+					spannerAPI = ExecuteBatchDMLAPI
 				}
 			}
 
@@ -765,7 +772,7 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 		return nil
 	}, spanner.TransactionOptions{CommitOptions: sc.BuildCommitOptions()})
 
-	return &rowsResult, batchQueryType, err
+	return &rowsResult, spannerAPI, err
 }
 
 // prepareQueries - Prepares mutations and DML statements for the transaction based on the provided queries.

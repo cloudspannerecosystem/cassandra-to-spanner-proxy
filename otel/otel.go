@@ -39,9 +39,10 @@ import (
 )
 
 type Attributes struct {
-	Method    string
-	Status    string
-	QueryType string
+	Method     string
+	Status     string
+	QueryType  string
+	SpannerAPI string
 }
 
 var (
