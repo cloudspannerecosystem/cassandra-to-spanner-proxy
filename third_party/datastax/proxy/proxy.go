@@ -1116,12 +1116,12 @@ func (c *client) handleExecuteForUpdate(raw *frame.RawFrame, msg *partialExecute
 	startTime := time.Now()
 	var result *message.RowsResult
 	var otelErr error
+	var spannerAPI string
 	ctx, span := c.proxy.otelInst.StartSpan(ctx, updateType, []attribute.KeyValue{
 		attribute.String(cassandraQuery, st.CassandraQuery),
 		attribute.String(spannerQuery, st.SpannerQuery),
 	})
 	defer c.proxy.otelInst.EndSpan(span)
-	defer recordMetrics(ctx, c.proxy.otelInst, handleExecuteForUpdate, startTime, updateType, spannerModule.ExecuteSqlAPI, otelErr)
 
 	queryMetadata, err := c.prepareUpdateQueryMetadata(raw, msg.PositionalValues, st)
 	if err != nil {
@@ -1138,7 +1138,7 @@ func (c *client) handleExecuteForUpdate(raw *frame.RawFrame, msg *partialExecute
 		queryMetadata.SelectQueryMapUpdate = st.SelectQueryMapUpdate
 		queryMetadata.UpdateSetValues = st.UpdateSetValues
 
-		result, err = c.proxy.sClient.UpdateMapByKey(ctx, *queryMetadata)
+		result, spannerAPI, err = c.proxy.sClient.UpdateMapByKey(ctx, *queryMetadata)
 		if err != nil {
 			c.proxy.logger.Error(fmt.Sprintf("Error while performing map update by key - Query -> %s <-", st.CassandraQuery), zap.Error(err))
 			c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1147,8 +1147,10 @@ func (c *client) handleExecuteForUpdate(raw *frame.RawFrame, msg *partialExecute
 			return
 		}
 	} else {
-		result, err = c.proxy.sClient.InsertUpdateOrDeleteStatement(ctx, *queryMetadata)
+		result, spannerAPI, err = c.proxy.sClient.InsertUpdateOrDeleteStatement(ctx, *queryMetadata)
 	}
+	defer recordMetrics(ctx, c.proxy.otelInst, handleExecuteForUpdate, startTime, updateType, spannerAPI, otelErr)
+
 	otelgo.AddAnnotation(ctx, spannerExecutionDoneEvent)
 	if err != nil {
 		c.proxy.logger.Error(errorAtSpanner, zap.String(Query, st.CassandraQuery), zap.Error(err))
@@ -1182,11 +1184,9 @@ func (c *client) handleExecuteForDelete(raw *frame.RawFrame, msg *partialExecute
 	var result *message.RowsResult
 	var spannerAPI string
 	if !executeByMutation {
-		result, err = c.proxy.sClient.InsertUpdateOrDeleteStatement(ctx, *queryMetadata)
-		spannerAPI = spannerModule.ExecuteSqlAPI
+		result, spannerAPI, err = c.proxy.sClient.InsertUpdateOrDeleteStatement(ctx, *queryMetadata)
 	} else {
-		result, err = c.proxy.sClient.DeleteUsingMutations(ctx, *queryMetadata)
-		spannerAPI = spannerModule.CommitAPI
+		result, spannerAPI, err = c.proxy.sClient.DeleteUsingMutations(ctx, *queryMetadata)
 
 	}
 	defer recordMetrics(ctx, c.proxy.otelInst, handleExecuteForDelete, start, deleteType, spannerAPI, otelErr)
@@ -1211,7 +1211,6 @@ func (c *client) handleExecuteForInsert(raw *frame.RawFrame, msg *partialExecute
 		attribute.String(spannerQuery, st.SpannerQuery),
 	})
 	defer c.proxy.otelInst.EndSpan(span)
-	defer recordMetrics(ctx, c.proxy.otelInst, handleExecuteForInsert, startTime, insertType, spannerModule.CommitAPI, otelErr)
 
 	queryMetadata, err := c.prepareInsertQueryMetadata(raw, msg.PositionalValues, st)
 	if err != nil {
@@ -1222,7 +1221,9 @@ func (c *client) handleExecuteForInsert(raw *frame.RawFrame, msg *partialExecute
 		return
 	}
 	otelgo.AddAnnotation(ctx, executingSpannerRequestEvent)
-	result, err := c.proxy.sClient.InsertOrUpdateMutation(ctx, *queryMetadata)
+	result, spannerAPI, err := c.proxy.sClient.InsertOrUpdateMutation(ctx, *queryMetadata)
+	defer recordMetrics(ctx, c.proxy.otelInst, handleExecuteForInsert, startTime, insertType, spannerAPI, otelErr)
+
 	otelgo.AddAnnotation(ctx, spannerExecutionDoneEvent)
 
 	if err != nil {
@@ -1424,12 +1425,12 @@ func (c *client) handleExecuteForSelect(raw *frame.RawFrame, msg *partialExecute
 	var query responsehandler.QueryMetadata
 	var err error
 	var result *message.RowsResult
+	var spannerAPI string
 	ctx, span := c.proxy.otelInst.StartSpan(ctx, selectType, []attribute.KeyValue{
 		attribute.String(cassandraQuery, st.CassandraQuery),
 		attribute.String(spannerQuery, st.SpannerQuery),
 	})
 	defer c.proxy.otelInst.EndSpan(span)
-	defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleExecuteForSelect, startTime, selectType, spannerModule.ExecuteSqlAPI, err)
 
 	// Get Decoded parameters
 	otelgo.AddAnnotation(ctx, "Decoding Bytes To Spanner Column Type")
@@ -1461,8 +1462,9 @@ func (c *client) handleExecuteForSelect(raw *frame.RawFrame, msg *partialExecute
 	}
 
 	otelgo.AddAnnotation(ctx, executingSpannerRequestEvent)
-	result, err = c.proxy.sClient.SelectStatement(ctx, query)
+	result, spannerAPI, err = c.proxy.sClient.SelectStatement(ctx, query)
 	otelgo.AddAnnotation(ctx, spannerExecutionDoneEvent)
+	defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleExecuteForSelect, startTime, selectType, spannerAPI, err)
 
 	if err != nil {
 		c.proxy.logger.Error(errorAtSpanner, zap.String(Query, st.CassandraQuery), zap.Error(err))
@@ -1474,6 +1476,7 @@ func (c *client) handleExecuteForSelect(raw *frame.RawFrame, msg *partialExecute
 }
 
 func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
+	var spannerAPI string
 	startTime := time.Now()
 	c.proxy.logger.Debug("handling query", zap.String("encodedQuery", msg.query), zap.Int16("stream", raw.Header.StreamId))
 
@@ -1497,7 +1500,6 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 
 		switch queryType {
 		case selectType:
-			defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleQuery, startTime, queryType, spannerModule.ExecuteSqlAPI, otelErr)
 			queryMetadata, err := c.proxy.translator.ToSpannerSelect(c.keyspace, msg.query)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
@@ -1519,7 +1521,8 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 				PrimaryKeys:     queryMetadata.PrimaryKeys,
 			}
 
-			result, err = c.proxy.sClient.SelectStatement(otelCtx, queryMeta)
+			result, spannerAPI, err = c.proxy.sClient.SelectStatement(otelCtx, queryMeta)
+			defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleQuery, startTime, queryType, spannerAPI, otelErr)
 
 			if err != nil {
 				c.proxy.logger.Error(errorAtSpanner, zap.String(Query, msg.query), zap.Error(err))
@@ -1530,7 +1533,6 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 			}
 			c.sender.Send(raw.Header, result)
 		case insertType:
-			defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleQuery, startTime, queryType, spannerModule.CommitAPI, otelErr)
 			queryMetadata, err := c.proxy.translator.ToSpannerUpsert(c.keyspace, msg.query)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
@@ -1561,7 +1563,8 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 				c.sender.Send(raw.Header, &message.ServerError{ErrorMessage: err.Error()})
 			}
 
-			result, err := c.proxy.sClient.InsertOrUpdateMutation(otelCtx, queryMeta)
+			result, spannerAPI, err := c.proxy.sClient.InsertOrUpdateMutation(otelCtx, queryMeta)
+			defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleQuery, startTime, queryType, spannerAPI, otelErr)
 
 			if err != nil {
 				c.proxy.logger.Error(errorAtSpanner, zap.String(Query, msg.query), zap.Error(err))
@@ -1576,7 +1579,6 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 
 			c.sender.Send(raw.Header, result)
 		case deleteType:
-			defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleQuery, startTime, queryType, spannerModule.ExecuteSqlAPI, otelErr)
 			queryMetadata, err := c.proxy.translator.ToSpannerDelete(c.keyspace, msg.query)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
@@ -1603,7 +1605,8 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 				c.sender.Send(raw.Header, &message.ServerError{ErrorMessage: err.Error()})
 			}
 
-			result, err := c.proxy.sClient.InsertUpdateOrDeleteStatement(otelCtx, queryMeta)
+			result, spannerAPI, err := c.proxy.sClient.InsertUpdateOrDeleteStatement(otelCtx, queryMeta)
+			defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleQuery, startTime, queryType, spannerAPI, otelErr)
 			if err != nil {
 				c.proxy.logger.Error(errorAtSpanner, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1616,7 +1619,6 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 			result.Metadata.ColumnCount = int32(len(VariableMetadata))
 			c.sender.Send(raw.Header, result)
 		case updateType:
-			defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleQuery, startTime, queryType, spannerModule.ExecuteSqlAPI, otelErr)
 			queryMetadata, err := c.proxy.translator.ToSpannerUpdate(c.keyspace, msg.query)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
@@ -1643,7 +1645,9 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 				c.sender.Send(raw.Header, &message.ServerError{ErrorMessage: err.Error()})
 			}
 
-			result, err := c.proxy.sClient.InsertUpdateOrDeleteStatement(otelCtx, queryMeta)
+			result, spannerAPI, err := c.proxy.sClient.InsertUpdateOrDeleteStatement(otelCtx, queryMeta)
+			defer recordMetrics(c.proxy.ctx, c.proxy.otelInst, handleQuery, startTime, queryType, spannerAPI, otelErr)
+
 			if err != nil {
 				c.proxy.logger.Error(errorAtSpanner, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})

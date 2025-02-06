@@ -1367,9 +1367,9 @@ func Test_handleExecutionForDeletePreparedQuery(t *testing.T) {
 	}
 	spanmockface.On("GetTableConfigs", ctx, query).Return(columnMap, columnListMap, &spannerModule.SystemQueryMetadataCache{}, nil)
 	spanmockface.On("SelectStatement", ctx, queryForTest).Return(&message.RowsResult{}, nil)
-	spanmockface.On("InsertUpdateOrDeleteStatement", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, nil).Once()
-	spanmockface.On("InsertUpdateOrDeleteStatement", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, errors.New("error occured")).Once()
-	spanmockface.On("DeleteUsingMutations", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, errors.New("error occured"))
+	spanmockface.On("InsertUpdateOrDeleteStatement", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, spannerModule.ExecuteStreamingSqlAPI, nil).Once()
+	spanmockface.On("InsertUpdateOrDeleteStatement", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, spannerModule.UnknownOrMixedAPI, errors.New("error occured")).Once()
+	spanmockface.On("DeleteUsingMutations", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, spannerModule.UnknownOrMixedAPI, errors.New("error occured"))
 	p.sClient = spanmockface
 	p.translator = &translator.Translator{TableConfig: &tableConfig.TableConfig{
 		TablesMetaData:  columnMap,
@@ -1545,8 +1545,8 @@ func Test_client_handleExecutionForSelectPreparedQuery(t *testing.T) {
 	assert.NoErrorf(t, err, "failed to create the proxy instance")
 
 	spanmockface := new(spannerMock.SpannerClientIface)
-	spanmockface.On("SelectStatement", mockProxy.ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, nil).Once()
-	spanmockface.On("SelectStatement", mockProxy.ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, errors.New("error occured")).Once()
+	spanmockface.On("SelectStatement", mockProxy.ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, spannerModule.ExecuteStreamingSqlAPI, nil).Once()
+	spanmockface.On("SelectStatement", mockProxy.ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, "", errors.New("error occured")).Once()
 	mockProxy.sClient = spanmockface
 	type fields struct {
 		ctx                 context.Context
@@ -1642,8 +1642,8 @@ func Test_client_handleExecutionForInsertPreparedQuery(t *testing.T) {
 	}
 
 	spanmockface := new(spannerMock.SpannerClientIface)
-	spanmockface.On("InsertOrUpdateMutation", mockProxy.ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, nil).Once()
-	spanmockface.On("InsertOrUpdateMutation", mockProxy.ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, errors.New("error occured")).Once()
+	spanmockface.On("InsertOrUpdateMutation", mockProxy.ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, spannerModule.CommitAPI, nil).Once()
+	spanmockface.On("InsertOrUpdateMutation", mockProxy.ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, spannerModule.UnknownOrMixedAPI, errors.New("error occured")).Once()
 	mockProxy.sClient = spanmockface
 	type fields struct {
 		ctx                 context.Context
@@ -1933,8 +1933,8 @@ func Test_client_handleExecutionForInsertPreparedQuery(t *testing.T) {
 // 	spanmockface := new(spannerMock.SpannerClientIface)
 // 	spanmockface.On("InsertUpdateOrDeleteStatement", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, nil).Once()
 // 	spanmockface.On("InsertUpdateOrDeleteStatement", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, errors.New("error occured")).Once()
-// 	spanmockface.On("UpdateMapByKey", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, nil).Once()
-// 	spanmockface.On("UpdateMapByKey", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, errors.New("error occured")).Once()
+// 	spanmockface.On("UpdateMapByKey", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, spannerModule.ExecuteStreamingSqlAPI, nil).Once()
+// 	spanmockface.On("UpdateMapByKey", ctx, mock.AnythingOfType("responsehandler.QueryMetadata")).Return(&message.RowsResult{}, spannerModule.UnknownOrMixedAPI, errors.New("error occured")).Once()
 // 	mockProxy.sClient = spanmockface
 
 // 	type fields struct {
