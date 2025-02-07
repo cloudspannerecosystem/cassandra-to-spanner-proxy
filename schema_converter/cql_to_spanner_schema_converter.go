@@ -154,8 +154,7 @@ func main() {
 
 	flag.Parse()
 
-	pattern := regexp.MustCompile(`.*\.googleapis\.com.*`)
-	isExternalHost := (*endpoint != "" && !pattern.MatchString(*endpoint))
+	isExternalHost := (*endpoint != "" && !regexp.MustCompile(`.*\.googleapis\.com.*`).MatchString(*endpoint))
 
 	if isExternalHost {
 		*projectID = "default"

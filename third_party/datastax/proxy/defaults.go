@@ -1,6 +1,9 @@
 package proxy
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+)
 
 // Defaults for Spanner Settings.
 const (
@@ -49,6 +52,10 @@ func ValidateAndApplyDefaults(cfg *UserConfig) error {
 		}
 		if cfg.Listeners[i].Spanner.DatabaseID == "" {
 			return fmt.Errorf("database id is not defined for listener %s %d", cfg.Listeners[i].Name, cfg.Listeners[i].Port)
+		}
+		if cfg.CassandraToSpannerConfigs.Endpoint != "" && !regexp.MustCompile(`.*\.googleapis\.com.*`).MatchString(cfg.CassandraToSpannerConfigs.Endpoint) {
+			cfg.CassandraToSpannerConfigs.ProjectID = "default"
+			cfg.Listeners[i].Spanner.InstanceID = "default"
 		}
 		if cfg.Listeners[i].Spanner.ProjectID == "" {
 			if cfg.CassandraToSpannerConfigs.ProjectID == "" {
