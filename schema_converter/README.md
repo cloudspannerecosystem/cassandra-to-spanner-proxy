@@ -65,6 +65,10 @@ go run cql_to_spanner_schema_converter.go --project <PROJECT_ID> --instance <INS
 - `[--table]`: Optional flag to specify different table name for TableConfigurations.
 - `[--enableUsingTimestamp]`: Optional flag to enable 'Using Timestamp' features, default is false.
 - `[--enableUsingTTL]`: Optional flag to enable 'Using TTL' features, default is false.
+- `[--usePlainText]`: Optional flag to enable sing plain text connection for external host, default is false.
+- `[--caCertificate]`: Optional flag to specify the CA certificate file path required for TLS/mTLS connection for external hosts.
+- `[--clientCertificate]`: Optional flag to specify the client certificate file path required for mTLS connection for external hosts.
+- `[--clientKey]`: Optional flag to specify the client key file path required for mTLS connection for external hosts.
 
 ### 2. Example Commands
 

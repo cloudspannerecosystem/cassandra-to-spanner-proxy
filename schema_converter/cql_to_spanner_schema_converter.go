@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"bufio"
@@ -150,9 +151,16 @@ func main() {
 	caCertificate := flag.String("caCertificate", "", "The CA certificate file to use for TLS")
 	clientCertificate := flag.String("clientCertificate", "", "The client certificate to establish mTLS for external hosts")
 	clientKey := flag.String("clientKey", "", "The client key to establish mTLS for external hosts")
-	externalHost := flag.Bool("externalHost", false, "Whether connection needs to be established with an externalHost")
 
 	flag.Parse()
+
+	pattern := regexp.MustCompile(`.*\.googleapis\.com.*`)
+	isExternalHost := (*endpoint != "" && !pattern.MatchString(*endpoint))
+
+	if isExternalHost {
+		*projectID = "default"
+		*instanceID = "default"
+	}
 
 	// Check if all required flags are provided
 	checkMissingFlags := func() []string {
@@ -181,7 +189,7 @@ func main() {
 	}
 
 	// Ensure that GCP credentials are set except for spanner external host connections
-	if !*externalHost {
+	if !isExternalHost {
 		if err := checkGCPCredentials(); err != nil {
 			log.Fatalf("Error: %v", err)
 		}
