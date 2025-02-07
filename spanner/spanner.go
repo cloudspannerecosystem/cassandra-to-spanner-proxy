@@ -171,20 +171,20 @@ func (sc *SpannerClient) SelectStatement(ctx context.Context, query responsehand
 			break
 		}
 		if err != nil {
-			return nil, UnknownOrMixedAPI, err
+			return nil, ExecuteStreamingSqlAPI, err
 		}
 
 		if rowCount == 0 {
 			otelgo.AddAnnotation(ctx, "Encoding Spanner Response")
 			rowFuncs, columnMetadata, err = sc.ResponseHandler.BuildColumnMetadata(iter.Metadata.GetRowType(), query.ProtocalV, query.AliasMap, query.TableName, query.KeyspaceName)
 			if err != nil {
-				return nil, UnknownOrMixedAPI, err
+				return nil, ExecuteStreamingSqlAPI, err
 			}
 		}
 
 		mr, err := sc.ResponseHandler.BuildResponseRow(row, rowFuncs)
 		if err != nil {
-			return nil, UnknownOrMixedAPI, err
+			return nil, ExecuteStreamingSqlAPI, err
 		}
 		data = append(data, mr)
 		rowCount += 1
@@ -196,7 +196,7 @@ func (sc *SpannerClient) SelectStatement(ctx context.Context, query responsehand
 		columnMetadata, err = sc.ResponseHandler.TableConfig.GetMetadataForSelectedColumns(query.TableName, query.SelectedColumns, query.AliasMap)
 		if err != nil {
 			sc.Logger.Error("error while fetching columnMetadata from config -", zap.Error(err))
-			return nil, UnknownOrMixedAPI, err
+			return nil, ExecuteStreamingSqlAPI, err
 		}
 	}
 	result := &message.RowsResult{
@@ -247,7 +247,7 @@ func (sc *SpannerClient) InsertOrUpdateMutation(ctx context.Context, query respo
 			[]*spanner.Mutation{buildInsertOrUpdateMutation(&query)},
 			spanner.ApplyAtLeastOnce(),
 			spanner.ApplyCommitOptions(sc.BuildCommitOptions())); err != nil {
-			return nil, UnknownOrMixedAPI, err
+			return nil, CommitAPI, err
 		}
 		return &rowsResult, CommitAPI, nil
 	}
@@ -578,7 +578,7 @@ func (sc *SpannerClient) DeleteUsingMutations(ctx context.Context, query respons
 	}
 	if err != nil {
 		sc.Logger.Error("Error while Mutation Delete - "+query.Query, zap.Error(err))
-		return nil, UnknownOrMixedAPI, err
+		return nil, CommitAPI, err
 	}
 
 	return &rowsResult, CommitAPI, err
