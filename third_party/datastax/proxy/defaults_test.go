@@ -198,7 +198,7 @@ func TestValidateExternalHostEndpointSetsDefaults(t *testing.T) {
 	if l.Spanner.InstanceID != "default" {
 		t.Errorf("Expected InstanceID to be 'default', got: %s", l.Spanner.InstanceID)
 	}
-	if cfg.CassandraToSpannerConfigs.ProjectID != "default" {
+	if l.Spanner.ProjectID != "default" {
 		t.Errorf("Expected ProjectID to be 'default', got: %s", cfg.CassandraToSpannerConfigs.ProjectID)
 	}
 }
