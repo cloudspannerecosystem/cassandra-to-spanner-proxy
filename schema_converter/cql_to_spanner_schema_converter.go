@@ -39,6 +39,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+const (
+	ExternalHostProjectID  = "default"
+	ExternalHostInstanceID = "default"
+)
+
 type ColumnMetadata struct {
 	ColumnName   string
 	CQLType      string
@@ -157,8 +162,8 @@ func main() {
 	isExternalHost := (*endpoint != "" && !regexp.MustCompile(`.*\.googleapis\.com.*`).MatchString(*endpoint))
 
 	if isExternalHost {
-		*projectID = "default"
-		*instanceID = "default"
+		*projectID = ExternalHostProjectID
+		*instanceID = ExternalHostInstanceID
 	}
 
 	// Check if all required flags are provided
