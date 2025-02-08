@@ -39,17 +39,19 @@ import (
 )
 
 type Attributes struct {
-	Method    string
-	Status    string
-	QueryType string
+	Method     string
+	Status     string
+	QueryType  string
+	SpannerAPI string
 }
 
 var (
-	attributeKeyDatabase  = attribute.Key("database")
-	attributeKeyMethod    = attribute.Key("method")
-	attributeKeyStatus    = attribute.Key("status")
-	attributeKeyInstance  = attribute.Key("instance")
-	attributeKeyQueryType = attribute.Key("query_type")
+	attributeKeyDatabase   = attribute.Key("database")
+	attributeKeyMethod     = attribute.Key("method")
+	attributeKeyStatus     = attribute.Key("status")
+	attributeKeyInstance   = attribute.Key("instance")
+	attributeKeyQueryType  = attribute.Key("query_type")
+	attributeKeySpannerAPI = attribute.Key("spanner_api")
 )
 
 // TracerProvider defines the interface for creating traces.
@@ -331,6 +333,7 @@ func (o *OpenTelemetry) RecordLatencyMetric(ctx context.Context, duration time.T
 	attr := o.attributeMap
 	attr = append(attr, attributeKeyMethod.String(attrs.Method))
 	attr = append(attr, attributeKeyQueryType.String(attrs.QueryType))
+	attr = append(attr, attributeKeySpannerAPI.String(attrs.SpannerAPI))
 	o.requestLatency.Record(ctx, int64(time.Since(duration).Milliseconds()), metric.WithAttributes(attr...))
 }
 
@@ -344,6 +347,7 @@ func (o *OpenTelemetry) RecordRequestCountMetric(ctx context.Context, attrs Attr
 	attr = append(attr, attributeKeyMethod.String(attrs.Method))
 	attr = append(attr, attributeKeyQueryType.String(attrs.QueryType))
 	attr = append(attr, attributeKeyStatus.String(attrs.Status))
+	attr = append(attr, attributeKeySpannerAPI.String(attrs.SpannerAPI))
 	o.requestCount.Add(ctx, 1, metric.WithAttributes(attr...))
 }
 

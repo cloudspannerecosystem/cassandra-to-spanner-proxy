@@ -266,7 +266,7 @@ func TestSRecordLatency(t *testing.T) {
 	ds1 = append(ds1, ds)
 	assert.NoErrorf(t, err, "error occurred")
 
-	ot.RecordLatencyMetric(cyx, time.Now(), Attributes{Method: "handlePrepare"})
+	ot.RecordLatencyMetric(cyx, time.Now(), Attributes{Method: "Batch", SpannerAPI: "Commit"})
 	assert.NoErrorf(t, err, "error occurred")
 	//when otel is disabled
 	cfg2 := &OTelConfig{
@@ -277,7 +277,7 @@ func TestSRecordLatency(t *testing.T) {
 	ds1 = append(ds1, ds)
 	assert.NoErrorf(t, err, "error occurred")
 
-	ot1.RecordLatencyMetric(cyx, time.Now(), Attributes{Method: "handlePrepare"})
+	ot1.RecordLatencyMetric(cyx, time.Now(), Attributes{Method: "Batch", QueryType: "ExecuteBatchDML"})
 
 	shutdownOpenTelemetryComponents(ds1)
 	assert.NoErrorf(t, err2, "error occurred")
@@ -308,7 +308,7 @@ func TestRecordRequestCountMetric(t *testing.T) {
 	ds1 = append(ds1, ds)
 	assert.NoErrorf(t, err, "error occurred")
 
-	ot.RecordRequestCountMetric(cyx, Attributes{Method: "handlePrepare"})
+	ot.RecordRequestCountMetric(cyx, Attributes{Method: "Batch", Status: "OK"})
 
 	assert.NoErrorf(t, err, "error occurred")
 
@@ -321,7 +321,7 @@ func TestRecordRequestCountMetric(t *testing.T) {
 	ds1 = append(ds1, ds)
 	assert.NoErrorf(t, err, "error occurred")
 
-	ot1.RecordRequestCountMetric(cyx, Attributes{Method: "handlePrepare"})
+	ot1.RecordRequestCountMetric(cyx, Attributes{Method: "Batch", Status: "OK"})
 
 	shutdownOpenTelemetryComponents(ds1)
 	assert.NoErrorf(t, err2, "error occurred")

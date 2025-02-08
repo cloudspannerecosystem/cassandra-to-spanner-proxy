@@ -73,14 +73,21 @@ const (
 	regular                       = "regular"
 )
 
+const (
+	CommitAPI              = "Commit"
+	ExecuteBatchDMLAPI     = "ExecuteBatchDML"
+	ExecuteStreamingSqlAPI = "ExecuteStreamingSql"
+	UnknownOrMixedAPI      = ""
+)
+
 type SpannerClientIface interface {
-	SelectStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
-	InsertUpdateOrDeleteStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
+	SelectStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error)
+	InsertUpdateOrDeleteStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error)
 	Close() error
-	InsertOrUpdateMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
-	DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
-	UpdateMapByKey(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
-	FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, error)
+	InsertOrUpdateMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error)
+	DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error)
+	UpdateMapByKey(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error)
+	FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, string, error)
 	GetTableConfigs(ctx context.Context, query responsehandler.QueryMetadata) (map[string]map[string]*tableConfig.Column, map[string][]tableConfig.Column, *SystemQueryMetadataCache, error)
 }
 
@@ -142,7 +149,7 @@ type SystemQueryMetadataCache struct {
 //   - query: query metadata.
 //
 // Returns: message.RowsResult (supported response format to the cassandra client) and error.
-func (sc *SpannerClient) SelectStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (sc *SpannerClient) SelectStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	var columnMetadata []*message.ColumnMetadata
 	var data message.RowSet
 	var err error
@@ -164,20 +171,20 @@ func (sc *SpannerClient) SelectStatement(ctx context.Context, query responsehand
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, ExecuteStreamingSqlAPI, err
 		}
 
 		if rowCount == 0 {
 			otelgo.AddAnnotation(ctx, "Encoding Spanner Response")
 			rowFuncs, columnMetadata, err = sc.ResponseHandler.BuildColumnMetadata(iter.Metadata.GetRowType(), query.ProtocalV, query.AliasMap, query.TableName, query.KeyspaceName)
 			if err != nil {
-				return nil, err
+				return nil, ExecuteStreamingSqlAPI, err
 			}
 		}
 
 		mr, err := sc.ResponseHandler.BuildResponseRow(row, rowFuncs)
 		if err != nil {
-			return nil, err
+			return nil, ExecuteStreamingSqlAPI, err
 		}
 		data = append(data, mr)
 		rowCount += 1
@@ -189,7 +196,7 @@ func (sc *SpannerClient) SelectStatement(ctx context.Context, query responsehand
 		columnMetadata, err = sc.ResponseHandler.TableConfig.GetMetadataForSelectedColumns(query.TableName, query.SelectedColumns, query.AliasMap)
 		if err != nil {
 			sc.Logger.Error("error while fetching columnMetadata from config -", zap.Error(err))
-			return nil, err
+			return nil, ExecuteStreamingSqlAPI, err
 		}
 	}
 	result := &message.RowsResult{
@@ -199,7 +206,7 @@ func (sc *SpannerClient) SelectStatement(ctx context.Context, query responsehand
 		},
 		Data: data,
 	}
-	return result, nil
+	return result, ExecuteStreamingSqlAPI, nil
 }
 
 // InsertUpdateOrDeleteStatement - Handle Insert/Update/Delete Operation
@@ -209,7 +216,7 @@ func (sc *SpannerClient) SelectStatement(ctx context.Context, query responsehand
 //   - query: query metadata.
 //
 // Returns: message.RowsResult (supported response format to the cassandra client) and error.
-func (sc *SpannerClient) InsertUpdateOrDeleteStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (sc *SpannerClient) InsertUpdateOrDeleteStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	otelgo.AddAnnotation(ctx, InsertUpdateOrDeleteStatement)
 	_, err := sc.Client.ReadWriteTransactionWithOptions(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		_, err := txn.Update(ctx, *buildStmt(&query))
@@ -219,7 +226,7 @@ func (sc *SpannerClient) InsertUpdateOrDeleteStatement(ctx context.Context, quer
 		return nil
 	}, spanner.TransactionOptions{CommitOptions: sc.BuildCommitOptions()})
 
-	return &rowsResult, err
+	return &rowsResult, ExecuteStreamingSqlAPI, err
 }
 
 // InsertOrUpdateMutation - Handle Insert/Update/Delete Operation
@@ -229,7 +236,7 @@ func (sc *SpannerClient) InsertUpdateOrDeleteStatement(ctx context.Context, quer
 //   - query: query metadata.
 //
 // Returns: message.RowsResult (supported response format to the cassandra client) and error.
-func (sc *SpannerClient) InsertOrUpdateMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (sc *SpannerClient) InsertOrUpdateMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	otelgo.AddAnnotation(ctx, InsertOrUpdateMutation)
 	if query.HasIfNotExists {
 		return sc.InsertMutation(ctx, query)
@@ -240,9 +247,9 @@ func (sc *SpannerClient) InsertOrUpdateMutation(ctx context.Context, query respo
 			[]*spanner.Mutation{buildInsertOrUpdateMutation(&query)},
 			spanner.ApplyAtLeastOnce(),
 			spanner.ApplyCommitOptions(sc.BuildCommitOptions())); err != nil {
-			return nil, err
+			return nil, CommitAPI, err
 		}
-		return &rowsResult, nil
+		return &rowsResult, CommitAPI, nil
 	}
 
 	_, err := sc.Client.ReadWriteTransactionWithOptions(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
@@ -270,7 +277,7 @@ func (sc *SpannerClient) InsertOrUpdateMutation(ctx context.Context, query respo
 		return nil
 	}, spanner.TransactionOptions{CommitOptions: sc.BuildCommitOptions()})
 
-	return &rowsResult, err
+	return &rowsResult, CommitAPI, err
 }
 
 // InsertOrUpdateMutation - Handle Insert Operation
@@ -280,7 +287,7 @@ func (sc *SpannerClient) InsertOrUpdateMutation(ctx context.Context, query respo
 //   - query: query metadata.
 //
 // Returns: message.RowsResult (supported response format to the cassandra client) and error.
-func (sc *SpannerClient) InsertMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (sc *SpannerClient) InsertMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	var err error
 	if sc.ReplayProtection {
 		_, err = sc.Client.Apply(ctx,
@@ -311,7 +318,7 @@ func (sc *SpannerClient) InsertMutation(ctx context.Context, query responsehandl
 			},
 		},
 		Data: message.RowSet{message.Row{row}},
-	}, nil
+	}, CommitAPI, nil
 }
 
 // Encode system_schema info to cassandra type
@@ -555,7 +562,7 @@ func ignoreInsert(iter *spanner.RowIterator) (bool, error) {
 //
 // Returns: message.RowsResult (supported response format to the cassandra client) and error.
 
-func (sc *SpannerClient) DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (sc *SpannerClient) DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	otelgo.AddAnnotation(ctx, DeleteUsingMutations)
 
 	var err error
@@ -571,10 +578,10 @@ func (sc *SpannerClient) DeleteUsingMutations(ctx context.Context, query respons
 	}
 	if err != nil {
 		sc.Logger.Error("Error while Mutation Delete - "+query.Query, zap.Error(err))
-		return nil, err
+		return nil, CommitAPI, err
 	}
 
-	return &rowsResult, err
+	return &rowsResult, CommitAPI, err
 }
 
 // UpdateMapByKey - Handle Update Map By Key Operation with pattern column[?] = true/false
@@ -585,7 +592,7 @@ func (sc *SpannerClient) DeleteUsingMutations(ctx context.Context, query respons
 //   - query: query metadata.
 //
 // Returns: message.RowsResult (supported response format to the cassandra client) and error.
-func (sc *SpannerClient) UpdateMapByKey(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (sc *SpannerClient) UpdateMapByKey(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	otelgo.AddAnnotation(ctx, "UpdateMapByKey")
 	stmt := spanner.Statement{
 		SQL:    query.SelectQueryMapUpdate,
@@ -627,7 +634,7 @@ func (sc *SpannerClient) UpdateMapByKey(ctx context.Context, query responsehandl
 		return nil
 	}, spanner.TransactionOptions{CommitOptions: sc.BuildCommitOptions()})
 
-	return &rowsResult, err
+	return &rowsResult, ExecuteStreamingSqlAPI, err
 }
 
 // executeQueryAndRetrieveResults - This function executes select statement, iterates rows and returns the results from Select Query.
@@ -707,8 +714,9 @@ func updateMapWithNewValues(mapValue map[string]bool, query *responsehandler.Que
 // Returns:
 //   - Error if the transaction fails.
 
-func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	otelgo.AddAnnotation(ctx, FilterAndExecuteBatch)
+	var spannerAPI string
 	_, err := sc.Client.ReadWriteTransactionWithOptions(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		filteredResponse, err := sc.filterBatch(ctx, txn, queries)
 		if err != nil {
@@ -731,6 +739,7 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 				if err := txn.BufferWrite(ms); err != nil {
 					return fmt.Errorf("failed to buffer write mutations: %w", err)
 				}
+				spannerAPI = CommitAPI
 			}
 
 			sc.Logger.Debug("Executing Statements from the filtered batch", zap.Int("statementCount", len(stmts)))
@@ -742,6 +751,12 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 				otelgo.AddAnnotationWithAttr(ctx, "Executed Batch Update", []attribute.KeyValue{
 					attribute.Int("Row Count", len(rowCounts)),
 				})
+				if spannerAPI == CommitAPI {
+					// TODO: refactor current implementation to only use commit or DML, but not both.
+					spannerAPI = UnknownOrMixedAPI
+				} else {
+					spannerAPI = ExecuteBatchDMLAPI
+				}
 			}
 
 			return nil
@@ -757,7 +772,7 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 		return nil
 	}, spanner.TransactionOptions{CommitOptions: sc.BuildCommitOptions()})
 
-	return &rowsResult, err
+	return &rowsResult, spannerAPI, err
 }
 
 // prepareQueries - Prepares mutations and DML statements for the transaction based on the provided queries.

@@ -535,11 +535,12 @@ func TestSelectStatement(t *testing.T) {
 	defer sc.Close()
 
 	query := mockQueryMetadata() // Assumes mockQueryMetadata is appropriately defined elsewhere
-	result, err := sc.SelectStatement(ctx, query)
+	result, spannerAPI, err := sc.SelectStatement(ctx, query)
 	if err != nil {
 		t.Errorf("Unexpected error in select query: %v", err)
 	}
 	assert.Equal(t, 1, len(result.Data), "there should not be any rows in result")
+	assert.Equal(t, ExecuteStreamingSqlAPI, spannerAPI)
 }
 
 func TestSelectStatementStale(t *testing.T) {
@@ -547,7 +548,7 @@ func TestSelectStatementStale(t *testing.T) {
 	defer sc.Close()
 
 	query := mockQueryMetadata() // Assumes mockQueryMetadata is appropriately defined elsewhere
-	result, err := sc.SelectStatement(ctx, query)
+	result, _, err := sc.SelectStatement(ctx, query)
 	if err != nil {
 		t.Errorf("Unexpected error in select query: %v", err)
 	}
@@ -622,7 +623,7 @@ func TestInsertUpdateOrDeleteStatement(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := sc.InsertUpdateOrDeleteStatement(ctx, tc.query)
+			result, spannerAPI, err := sc.InsertUpdateOrDeleteStatement(ctx, tc.query)
 			if tc.expectError {
 				if err == nil {
 					t.Errorf("Expected error but got nil for test case: %s", tc.name)
@@ -632,6 +633,7 @@ func TestInsertUpdateOrDeleteStatement(t *testing.T) {
 					t.Errorf("Error in InsertUpdateOrDeleteStatement for test case %s: %s", tc.name, err.Error())
 				}
 				assert.Equal(t, 0, len(result.Data), "unexpected number of rows in result for test case: "+tc.name)
+				assert.Equal(t, ExecuteStreamingSqlAPI, spannerAPI)
 			}
 		})
 	}
@@ -780,11 +782,12 @@ func TestInsertOrUpdateMutation(t *testing.T) {
 				UsingTSCheck: tc.usingTSCheck,
 				Params:       tc.params,
 			}
-			result, err := sc.InsertOrUpdateMutation(ctx, query)
+			result, spannerAPI, err := sc.InsertOrUpdateMutation(ctx, query)
 			if err != nil {
 				t.Errorf("Error in InsertOrUpdateMutation: %s", err.Error())
 			}
 			assert.Equal(t, 0, len(result.Data), "unexpected number of rows in result")
+			assert.Equal(t, CommitAPI, spannerAPI)
 			data, err := getDataFromSpanner(ctx, sc.Client, fmt.Sprintf("select * from keyspace1_comm_upload_event where user_id='%s';", tc.params["user_id"]))
 			if err != nil {
 				t.Errorf(ErrorWhileFetchingFromSpanner, err)
@@ -886,10 +889,11 @@ func TestDeleteUsingMutations(t *testing.T) {
 		Params:       map[string]interface{}{"value1": "0856e83c-81c3-430c-b018-9eb22ea3882a"},
 	}
 
-	_, err := sc.DeleteUsingMutations(ctx, query)
+	_, spannerAPI, err := sc.DeleteUsingMutations(ctx, query)
 	if err != nil {
 		t.Error("Error while function call DeleteUsingMutations")
 	}
+	assert.Equal(t, CommitAPI, spannerAPI)
 }
 
 func TestUpdateMapByKey(t *testing.T) {
@@ -950,9 +954,10 @@ func TestUpdateMapByKey(t *testing.T) {
 				},
 			}
 
-			result, err := sc.UpdateMapByKey(ctx, query)
+			result, spannerAPI, err := sc.UpdateMapByKey(ctx, query)
 			assert.NoError(t, err, "Unexpected error in UpdateMapByKey")
 			assert.Equal(t, 0, len(result.Data), "Result size should be 0 but found %d", len(result.Data))
+			assert.Equal(t, ExecuteStreamingSqlAPI, spannerAPI)
 
 			data, err := getDataFromSpanner(ctx, sc.Client, fmt.Sprintf("select * from keyspace1_address_book_entries WHERE `user_id`='%s';", tt.params["value1"]))
 			if err != nil {
@@ -1034,11 +1039,12 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 			queries[i] = query
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with same PK: %v", err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithSamePK")
+			assert.Equal(t, CommitAPI, spannerAPI)
 		}
 
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_1' and `upload_time`= 5000000;")
@@ -1079,11 +1085,12 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 			queries[i] = query
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with different PK: %v", err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithDifferentPK")
+			assert.Equal(t, CommitAPI, spannerAPI)
 		}
 
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='diff_pk_1' order by upload_time;")
@@ -1118,11 +1125,12 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 			},
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for range delete: %v", err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: RangeDelete")
+			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='diff_pk_1' order by upload_time;")
@@ -1169,7 +1177,7 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 	// 		queries = append(queries, query)
 	// 	}
 
-	// 	result, err := sc.FilterAndExecuteBatch(ctx, queries)
+	// 	result, spannerAPI,  err := sc.FilterAndExecuteBatch(ctx, queries)
 	// 	if err != nil {
 	// 		t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 	// 	} else {
@@ -1230,11 +1238,12 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 			queries = append(queries, query)
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with same PK: %v", err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithSamePK")
+			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_1';")
@@ -1289,11 +1298,12 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDelete")
+			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='diff_pk_2' order by upload_time;")
@@ -1336,11 +1346,12 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertWithSamePKFollowedByDelete")
+			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_5' order by upload_time;")
@@ -1372,7 +1383,7 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			}
 			queries = append(queries, query)
 		}
-		_, err := sc.FilterAndExecuteBatch(ctx, queries)
+		_, _, err := sc.FilterAndExecuteBatch(ctx, queries)
 		assert.Error(t, fmt.Errorf("failed to filter queries: last_commit_ts is not a time.Time value"), err, "MultipleInsertWithSamePKFollowedByDeleteError should fail")
 	})
 
@@ -1412,11 +1423,12 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDeleteOnSamePK")
+			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_7X' order by upload_time;")
@@ -1466,11 +1478,12 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDeleteOnDifferentPK")
+			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='diff_pk_7X' order by upload_time;")
@@ -1534,11 +1547,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			PrimaryKeys:  []string{"user_id", "upload_time"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKCase1")
+			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_9' order by upload_time;")
 		assert.Error(t, fmt.Errorf("no rows found"), err, "all rows should have deleted for AllOperationWithSamePKCase1")
@@ -1611,11 +1625,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			PrimaryKeys:  []string{"user_id"},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKey")
+			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		_, err = getDataFromSpanner(ctx, sc.Client, fmt.Sprintf("select * from %s WHERE `user_id`='same_pk_10';", TABLE_ADDRESS))
 		assert.Error(t, fmt.Errorf("no rows found"), err, "all rows should have deleted for AllOperationWithSamePKUpdateMapByKey")
@@ -1688,11 +1703,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_11';")
 		if err != nil {
@@ -1778,11 +1794,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			},
 		})
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase3")
+			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_12';")
 		if err != nil {
@@ -1862,11 +1879,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			})
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_13';")
 		if err != nil {
@@ -1919,11 +1937,12 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 			})
 		}
 
-		result, err := sc.FilterAndExecuteBatch(ctx, queries)
+		result, spannerAPI, err := sc.FilterAndExecuteBatch(ctx, queries)
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
 			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_13';")
 		if err != nil {

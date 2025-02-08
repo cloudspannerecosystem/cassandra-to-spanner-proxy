@@ -56,18 +56,20 @@ func (_m *SpannerClientIface) Close() error {
 }
 
 // UpdateMapByKey provides a mock function with given fields: ctx, query
-func (_m *SpannerClientIface) UpdateMapByKey(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (_m *SpannerClientIface) UpdateMapByKey(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	ret := _m.Called(ctx, query)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateMapByKey")
+			panic("no return value specified for UpdateMapByKey")
 	}
 
 	var r0 *message.RowsResult
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, error)); ok {
-		return rf(ctx, query)
-	}
+	var r1 string
+	var r2 error
+
+	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, string, error)); ok {
+			r0, r1, r2 = rf(ctx, query)
+	} else {
 	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) *message.RowsResult); ok {
 		r0 = rf(ctx, query)
 	} else {
@@ -75,29 +77,38 @@ func (_m *SpannerClientIface) UpdateMapByKey(ctx context.Context, query response
 			r0 = ret.Get(0).(*message.RowsResult)
 		}
 	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) string); ok {
 		r1 = rf(ctx, query)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(string)
+		}
+	}
+			if rf, ok := ret.Get(2).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+					r2 = rf(ctx, query)
+			} else {
+					r2 = ret.Error(2)
+			}
 	}
 
-	return r0, r1
+	return r0, r1, r2
 }
 
 // DeleteUsingMutations provides a mock function with given fields: ctx, query
-func (_m *SpannerClientIface) DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (_m *SpannerClientIface) DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	ret := _m.Called(ctx, query)
 
 	if len(ret) == 0 {
-		panic("no return value specified for DeleteUsingMutations")
+			panic("no return value specified for DeleteUsingMutations")
 	}
 
 	var r0 *message.RowsResult
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, error)); ok {
-		return rf(ctx, query)
-	}
+	var r1 string
+	var r2 error
+
+	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, string, error)); ok {
+			r0, r1, r2 = rf(ctx, query)
+	} else {
 	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) *message.RowsResult); ok {
 		r0 = rf(ctx, query)
 	} else {
@@ -105,44 +116,63 @@ func (_m *SpannerClientIface) DeleteUsingMutations(ctx context.Context, query re
 			r0 = ret.Get(0).(*message.RowsResult)
 		}
 	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) string); ok {
 		r1 = rf(ctx, query)
 	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FilterAndExecuteBatch provides a mock function with given fields: ctx, queries
-func (_m *SpannerClientIface) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, error) {
-	ret := _m.Called(ctx, queries)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FilterAndExecuteBatch")
-	}
-
-	var r0 *message.RowsResult
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) (*message.RowsResult, error)); ok {
-		return rf(ctx, queries)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) *message.RowsResult); ok {
-		r0 = rf(ctx, queries)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*message.RowsResult)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(string)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []*responsehandler.QueryMetadata) error); ok {
-		r1 = rf(ctx, queries)
-	} else {
-		r1 = ret.Error(1)
+			if rf, ok := ret.Get(2).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+					r2 = rf(ctx, query)
+			} else {
+					r2 = ret.Error(2)
+			}
 	}
 
-	return r0, r1
+	return r0, r1, r2
+}
+
+// FilterAndExecuteBatch provides a mock function with given fields: ctx, queries
+func (_m *SpannerClientIface) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
+	ret := _m.Called(ctx, queries)
+
+	if len(ret) == 0 {
+			panic("no return value specified for FilterAndExecuteBatch")
+	}
+
+	var r0 *message.RowsResult
+	var r1 string  
+	var r2 error  
+
+	if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) (*message.RowsResult, string, error)); ok {
+			r0, r1, r2 = rf(ctx, queries) 
+	} else {
+			if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) *message.RowsResult); ok {
+					r0 = rf(ctx, queries)
+			} else {
+					if ret.Get(0) != nil {
+							r0 = ret.Get(0).(*message.RowsResult)
+					}
+			}
+
+			if rf, ok := ret.Get(1).(func(context.Context, []*responsehandler.QueryMetadata) string); ok { // Add this block for string
+					r1 = rf(ctx, queries)
+			} else {
+					if ret.Get(1) != nil {
+							r1 = ret.Get(1).(string)
+					}
+			}
+			if rf, ok := ret.Get(2).(func(context.Context, []*responsehandler.QueryMetadata) error); ok { // Adjust index to 2.
+					r2 = rf(ctx, queries)
+			} else {
+					r2 = ret.Error(2) 
+			}
+
+	}
+
+	return r0, r1, r2 
 }
 
 // GetTableConfigs provides a mock function with given fields: ctx, query
@@ -194,18 +224,20 @@ func (_m *SpannerClientIface) GetTableConfigs(ctx context.Context, query respons
 }
 
 // InsertOrUpdateMutation provides a mock function with given fields: ctx, query
-func (_m *SpannerClientIface) InsertOrUpdateMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (_m *SpannerClientIface) InsertOrUpdateMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	ret := _m.Called(ctx, query)
 
 	if len(ret) == 0 {
-		panic("no return value specified for InsertOrUpdateMutation")
+			panic("no return value specified for InsertOrUpdateMutation")
 	}
 
 	var r0 *message.RowsResult
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, error)); ok {
-		return rf(ctx, query)
-	}
+	var r1 string
+	var r2 error
+
+	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, string, error)); ok {
+			r0, r1, r2 = rf(ctx, query)
+	} else {
 	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) *message.RowsResult); ok {
 		r0 = rf(ctx, query)
 	} else {
@@ -213,29 +245,39 @@ func (_m *SpannerClientIface) InsertOrUpdateMutation(ctx context.Context, query 
 			r0 = ret.Get(0).(*message.RowsResult)
 		}
 	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) string); ok {
 		r1 = rf(ctx, query)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(string)
+		}
 	}
 
-	return r0, r1
+			if rf, ok := ret.Get(2).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+					r2 = rf(ctx, query)
+			} else {
+					r2 = ret.Error(2)
+			}
+	}
+
+	return r0, r1, r2
 }
 
 // InsertUpdateOrDeleteStatement provides a mock function with given fields: ctx, query
-func (_m *SpannerClientIface) InsertUpdateOrDeleteStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
+func (_m *SpannerClientIface) InsertUpdateOrDeleteStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	ret := _m.Called(ctx, query)
 
 	if len(ret) == 0 {
-		panic("no return value specified for InsertUpdateOrDeleteStatement")
+			panic("no return value specified for InsertUpdateOrDeleteStatement")
 	}
 
 	var r0 *message.RowsResult
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, error)); ok {
-		return rf(ctx, query)
-	}
+	var r1 string 
+	var r2 error
+
+	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, string, error)); ok {
+			r0, r1, r2 = rf(ctx, query)
+	} else {
 	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) *message.RowsResult); ok {
 		r0 = rf(ctx, query)
 	} else {
@@ -243,44 +285,63 @@ func (_m *SpannerClientIface) InsertUpdateOrDeleteStatement(ctx context.Context,
 			r0 = ret.Get(0).(*message.RowsResult)
 		}
 	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) string); ok {
 		r1 = rf(ctx, query)
 	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SelectStatement provides a mock function with given fields: ctx, query
-func (_m *SpannerClientIface) SelectStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {
-	ret := _m.Called(ctx, query)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SelectStatement")
-	}
-
-	var r0 *message.RowsResult
-	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, error)); ok {
-		return rf(ctx, query)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) *message.RowsResult); ok {
-		r0 = rf(ctx, query)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*message.RowsResult)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(string)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) error); ok {
-		r2 = rf(ctx, query)
-	} else {
-		r2 = ret.Error(1)
+			if rf, ok := ret.Get(2).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+					r2 = rf(ctx, query)
+			} else {
+					r2 = ret.Error(2)
+			}
 	}
 
-	return r0, r2
+	return r0, r1, r2
+}
+
+
+// SelectStatement provides a mock function with given fields: ctx, query
+
+func (_m *SpannerClientIface) SelectStatement(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
+        ret := _m.Called(ctx, query)
+
+        if len(ret) == 0 {
+                panic("no return value specified for SelectStatement")
+        }
+
+        var r0 *message.RowsResult
+        var r1 string 
+        var r2 error
+        if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) (*message.RowsResult, string, error)); ok {
+                r0, r1, r2 = rf(ctx, query)  
+        } else {
+        if rf, ok := ret.Get(0).(func(context.Context, responsehandler.QueryMetadata) *message.RowsResult); ok {
+            r0 = rf(ctx, query)
+        } else {
+            if ret.Get(0) != nil {
+                r0 = ret.Get(0).(*message.RowsResult)
+            }
+        }
+        if rf, ok := ret.Get(1).(func(context.Context, responsehandler.QueryMetadata) string); ok {
+            r1 = rf(ctx, query)
+        } else {
+            if ret.Get(1) != nil {
+                r1 = ret.Get(1).(string)
+            }
+        }
+                if rf, ok := ret.Get(2).(func(context.Context, responsehandler.QueryMetadata) error); ok {
+                        r2 = rf(ctx, query)
+                } else {
+                        r2 = ret.Error(2)
+                }
+        }
+
+
+        return r0, r1, r2
 }
 
 // NewSpannerClientIface creates a new instance of SpannerClientIface. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
