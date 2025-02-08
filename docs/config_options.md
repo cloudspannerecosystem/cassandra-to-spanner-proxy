@@ -111,6 +111,9 @@ otel:
     # Name of the collector service to be setup as a sidecar
     serviceName: YOUR_OTEL_COLLECTOR_SERVICE_NAME
 
+    # Whether or not to disable generating random service instance id key, Default 'False'.
+    disableRandomServiceInstanceIDKey: False
+
     healthcheck:
         # Enable the health check in this proxy application config only if the
         # "health_check" extension is added to the OTEL collector service configuration.
