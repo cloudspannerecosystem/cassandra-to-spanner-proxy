@@ -39,6 +39,21 @@ cassandra_to_spanner_configs:
     # [Optional] client key path for mTLS configuration
     clientKey : PATH/TO/CLIENT_KEY
 
+    # [Optional] Endpoint (host:port) to bind the HTTP server for the readiness check endpoint.
+    # This endpoint is used for monitoring purposes to verify if all configured listeners
+    # are successfully started and running.
+    # 
+    # To check the status, you need to query the `/ready` path of this endpoint
+    #
+    # It will return an HTTP 200 OK status if all listeners are up and running.
+    # If not all listeners are ready, it returns HTTP 503 Service Unavailable.
+    #
+    # If this option is *not* set, the readiness check HTTP endpoint
+    # will *not* be registered and no readiness checks will be available via HTTP.
+    #
+    # Default: (Empty - readiness check endpoint disabled)
+    readinessCheckEndpoint: YOUR_READINESS_CHECK_ENDPOINT
+
 listeners:
   - name: YOUR_CLUSTER_NAME_1
 
@@ -95,9 +110,6 @@ otel:
 
     # Name of the collector service to be setup as a sidecar
     serviceName: YOUR_OTEL_COLLECTOR_SERVICE_NAME
-
-    # Whether or not to disable generating random service instance id key, Default 'False'.
-    disableRandomServiceInstanceIDKey: False
 
     healthcheck:
         # Enable the health check in this proxy application config only if the
