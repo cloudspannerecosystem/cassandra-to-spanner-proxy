@@ -1,6 +1,9 @@
 package proxy
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+)
 
 // Defaults for Spanner Settings.
 const (
@@ -8,6 +11,8 @@ const (
 	DefaultSpannerMinSession   = 100
 	DefaultSpannerMaxSession   = 400
 	DefaultConfigTableName     = "TableConfigurations"
+	ExternalHostProjectID      = "default"
+	ExternalHostInstanceID     = "default"
 )
 
 // ApplyDefaults applies default values to the configuration after it is loaded
@@ -49,6 +54,10 @@ func ValidateAndApplyDefaults(cfg *UserConfig) error {
 		}
 		if cfg.Listeners[i].Spanner.DatabaseID == "" {
 			return fmt.Errorf("database id is not defined for listener %s %d", cfg.Listeners[i].Name, cfg.Listeners[i].Port)
+		}
+		if cfg.CassandraToSpannerConfigs.Endpoint != "" && !regexp.MustCompile(`.*\.googleapis\.com.*`).MatchString(cfg.CassandraToSpannerConfigs.Endpoint) {
+			cfg.Listeners[i].Spanner.ProjectID = ExternalHostProjectID
+			cfg.Listeners[i].Spanner.InstanceID = ExternalHostInstanceID
 		}
 		if cfg.Listeners[i].Spanner.ProjectID == "" {
 			if cfg.CassandraToSpannerConfigs.ProjectID == "" {

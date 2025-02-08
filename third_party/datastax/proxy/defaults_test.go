@@ -169,3 +169,61 @@ func TestValidateAndApplyDefaultsMissingDatabaseID(t *testing.T) {
 		t.Errorf("Expected error for missing DatabaseID, got: %v", err)
 	}
 }
+
+func TestValidateExternalHostEndpointSetsDefaults(t *testing.T) {
+	cfg := &UserConfig{
+		Listeners: []Listener{
+			{
+				Name: "Listener1",
+				Port: 8080,
+				Spanner: Spanner{
+					DatabaseID: "db-1",
+					InstanceID: "",
+					ProjectID:  "",
+				},
+			},
+		},
+		CassandraToSpannerConfigs: CassandraToSpannerConfigs{
+			Endpoint:  "localhost:9090", // ExternalHost endpoint
+			ProjectID: "",
+		},
+	}
+
+	err := ValidateAndApplyDefaults(cfg)
+	if err != nil {
+		t.Errorf("Did not expect an error, got: %v", err)
+	}
+
+	l := cfg.Listeners[0]
+	if l.Spanner.InstanceID != "default" {
+		t.Errorf("Expected InstanceID to be 'default', got: %s", l.Spanner.InstanceID)
+	}
+	if l.Spanner.ProjectID != "default" {
+		t.Errorf("Expected ProjectID to be 'default', got: %s", cfg.CassandraToSpannerConfigs.ProjectID)
+	}
+}
+
+func TestValidateCloudSpannerEndpointMissingProjectAndInstance(t *testing.T) {
+	cfg := &UserConfig{
+		Listeners: []Listener{
+			{
+				Name: "Listener1",
+				Port: 8080,
+				Spanner: Spanner{
+					DatabaseID: "db-1",
+					InstanceID: "",
+					ProjectID:  "",
+				},
+			},
+		},
+		CassandraToSpannerConfigs: CassandraToSpannerConfigs{
+			Endpoint:  "spanner.googleapis.com:443", // Cloud Spanner endpoint
+			ProjectID: "",                           // Empty ProjectID
+		},
+	}
+	err := ValidateAndApplyDefaults(cfg)
+	expectedError := "project id is not defined for listener Listener1 8080"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Expected error for missing ProjectID and InstanceID with Cloud Spanner endpoint, got: %v", err)
+	}
+}
