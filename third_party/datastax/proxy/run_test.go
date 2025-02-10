@@ -1116,6 +1116,8 @@ func TestLoadConfig(t *testing.T) {
 	appFs := afero.NewMemMapFs()
 	configFile := "/config.yaml"
 	configData := `
+cassandra_to_spanner_configs:
+  readinessCheckEndpoint: localhost:8080
 listeners:
   - name: Listener1
     port: 8080

@@ -22,10 +22,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -44,6 +46,8 @@ var (
 	proxyReleaseVersion   = "v1.0.4"
 )
 var readFile = os.ReadFile
+var atomicStartedListenersCounter atomic.Int32
+var expectedListeners int // to be set in Run function
 
 const defaultConfigFile = "config.yaml"
 
@@ -57,16 +61,17 @@ type UserConfig struct {
 
 // CassandraToSpannerConfigs contains configurations for Cassandra to Spanner
 type CassandraToSpannerConfigs struct {
-	KeyspaceFlatter   bool   `yaml:"keyspaceFlatter"`
-	ProjectID         string `yaml:"projectId"`
-	ConfigTableName   string `yaml:"configTableName"`
-	UseRowTTL         bool   `yaml:"useRowTTL"`
-	UseRowTimestamp   bool   `yaml:"useRowTimestamp"`
-	Endpoint          string `yaml:"endpoint"`
-	CaCertificate     string `yaml:"caCertificate"`
-	ClientCertificate string `yaml:"clientCertificate"`
-	ClientKey         string `yaml:"clientKey"`
-	UsePlainText      bool   `yaml:"usePlainText"`
+	KeyspaceFlatter        bool   `yaml:"keyspaceFlatter"`
+	ProjectID              string `yaml:"projectId"`
+	ConfigTableName        string `yaml:"configTableName"`
+	UseRowTTL              bool   `yaml:"useRowTTL"`
+	UseRowTimestamp        bool   `yaml:"useRowTimestamp"`
+	Endpoint               string `yaml:"endpoint"`
+	CaCertificate          string `yaml:"caCertificate"`
+	ClientCertificate      string `yaml:"clientCertificate"`
+	ClientKey              string `yaml:"clientKey"`
+	UsePlainText           bool   `yaml:"usePlainText"`
+	ReadinessCheckEndpoint string `yaml:"readinessCheckEndpoint"`
 }
 
 // OtelConfig defines the structure of the YAML configuration
@@ -149,6 +154,18 @@ type runConfig struct {
 	LogLevel           string        `yaml:"log-level" help:"Log level configuration." default:"info" env:"LOG_LEVEL"`
 }
 
+func readinessCheckHandler(w http.ResponseWriter, r *http.Request) {
+	started := int(atomicStartedListenersCounter.Load()) == expectedListeners
+
+	if started {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("All listeners are up and running"))
+	} else {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte("Some listeners are still not ready"))
+	}
+}
+
 // Run starts the proxy command. 'args' shouldn't include the executable (i.e. os.Args[1:]). It returns the exit code
 // for the proxy.
 func Run(ctx context.Context, args []string) int {
@@ -163,6 +180,21 @@ func Run(ctx context.Context, args []string) int {
 	UserConfig, err := LoadConfig(configFile)
 	if err != nil {
 		log.Fatalf("could not read configuration file %s: %v", configFile, err)
+	}
+
+	atomicStartedListenersCounter.Store(0)
+	expectedListeners = len(UserConfig.Listeners)
+
+	// Start HTTP server for readiness check if user has specified an endpoint for it.
+	if UserConfig.CassandraToSpannerConfigs.ReadinessCheckEndpoint != "" {
+		http.HandleFunc("/debug/health", readinessCheckHandler)
+		httpServer := &http.Server{Addr: UserConfig.CassandraToSpannerConfigs.ReadinessCheckEndpoint}
+		go func() {
+			if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Printf("Error when registering http health check endpoint:%v", err)
+			}
+		}()
+		defer httpServer.Shutdown(ctx)
 	}
 
 	parser, err := kong.New(&cfg)
@@ -427,6 +459,7 @@ func (c *runConfig) listenAndServe(p *Proxy, ctx context.Context, logger *zap.Lo
 	}
 
 	logger.Info("proxy is listening", zap.Stringer("address", proxyListener.Addr()))
+	atomicStartedListenersCounter.Add(1)
 
 	wg.Add(numServers)
 
