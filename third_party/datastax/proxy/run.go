@@ -43,7 +43,7 @@ var (
 	clusterReleaseversion = "4.0.0.6816"
 	defaultCqlVersion     = "3.4.5"
 	TCP_BIND_PORT         = "0.0.0.0:%s"
-	proxyReleaseVersion   = "v1.0.4"
+	proxyReleaseVersion   = "v1.0.5"
 )
 var readFile = os.ReadFile
 var atomicStartedListenersCounter atomic.Int32
