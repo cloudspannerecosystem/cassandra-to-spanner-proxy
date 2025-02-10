@@ -1,5 +1,14 @@
 # Changelog
 
+# [1.0.5] - 2025-02-10
+
+### Features
+* Support a configurable readiness check endpoint via HTTP.
+
+### Enhancements
+* Record granular spanner api called in request count and latency metrics.
+* Automatically set project and instances to defeault for external hosts to simplify the connectino configurat
+
 # [1.0.4] - 2025-02-03
 
 ### Features
