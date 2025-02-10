@@ -187,7 +187,7 @@ func Run(ctx context.Context, args []string) int {
 
 	// Start HTTP server for readiness check if user has specified an endpoint for it.
 	if UserConfig.CassandraToSpannerConfigs.ReadinessCheckEndpoint != "" {
-		http.HandleFunc("/ready", readinessCheckHandler)
+		http.HandleFunc("/debug/health", readinessCheckHandler)
 		httpServer := &http.Server{Addr: UserConfig.CassandraToSpannerConfigs.ReadinessCheckEndpoint}
 		go func() {
 			if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
