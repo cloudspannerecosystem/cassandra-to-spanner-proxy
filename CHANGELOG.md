@@ -6,8 +6,8 @@
 * Support a configurable readiness check endpoint via HTTP.
 
 ### Enhancements
-* Record granular spanner api called in request count and latency metrics.
-* Automatically set project and instances to defeault for external hosts to simplify the connectino configurat
+* Add label "spanner_api" in request count and latency metrics for granular observability.
+* Automatically set project and instances to defeault for external hosts to simplify the connection configuration.
 
 # [1.0.4] - 2025-02-03
 
