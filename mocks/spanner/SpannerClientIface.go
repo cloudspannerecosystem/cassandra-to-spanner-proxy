@@ -135,25 +135,25 @@ func (_m *SpannerClientIface) DeleteUsingMutations(ctx context.Context, query re
 }
 
 // FilterAndExecuteBatch provides a mock function with given fields: ctx, queries
-func (_m *SpannerClientIface) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
+func (_m *SpannerClientIface) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.VoidResult, string, error) {
 	ret := _m.Called(ctx, queries)
 
 	if len(ret) == 0 {
 			panic("no return value specified for FilterAndExecuteBatch")
 	}
 
-	var r0 *message.RowsResult
+	var r0 *message.VoidResult
 	var r1 string  
 	var r2 error  
 
-	if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) (*message.RowsResult, string, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) (*message.VoidResult, string, error)); ok {
 			r0, r1, r2 = rf(ctx, queries) 
 	} else {
-			if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) *message.RowsResult); ok {
+			if rf, ok := ret.Get(0).(func(context.Context, []*responsehandler.QueryMetadata) *message.VoidResult); ok {
 					r0 = rf(ctx, queries)
 			} else {
 					if ret.Get(0) != nil {
-							r0 = ret.Get(0).(*message.RowsResult)
+							r0 = ret.Get(0).(*message.VoidResult)
 					}
 			}
 
