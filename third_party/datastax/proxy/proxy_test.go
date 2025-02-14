@@ -1238,7 +1238,7 @@ type MockSpannerClient struct {
 	InsertOrUpdateMutationFunc        func(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
 	UpdateMapByKeyFunc                func(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
 	DeleteUsingMutationsFunc          func(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error)
-	FilterAndExecuteBatchFunc         func(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, error)
+	FilterAndExecuteBatchFunc         func(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.VoidResult, error)
 }
 
 func (m *MockSpannerClient) DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, error) {

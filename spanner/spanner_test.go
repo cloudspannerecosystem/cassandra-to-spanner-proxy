@@ -1043,7 +1043,7 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with same PK: %v", err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithSamePK")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllInsertWithSamePK")
 			assert.Equal(t, CommitAPI, spannerAPI)
 		}
 
@@ -1089,7 +1089,7 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with different PK: %v", err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithDifferentPK")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllInsertWithDifferentPK")
 			assert.Equal(t, CommitAPI, spannerAPI)
 		}
 
@@ -1129,7 +1129,7 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for range delete: %v", err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: RangeDelete")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch batch test case: RangeDelete")
 			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
@@ -1242,7 +1242,7 @@ func TestFilterAndExecuteBatch(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error while executing FilterAndExecuteBatch for all insert with same PK: %v", err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllInsertWithSamePK")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllInsertWithSamePK")
 			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
@@ -1302,7 +1302,7 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDelete")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: MultipleInsertFollowedByRangeDelete")
 			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
@@ -1350,7 +1350,7 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertWithSamePKFollowedByDelete")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: MultipleInsertWithSamePKFollowedByDelete")
 			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
@@ -1427,7 +1427,7 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDeleteOnSamePK")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: MultipleInsertFollowedByRangeDeleteOnSamePK")
 			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
@@ -1482,7 +1482,7 @@ func TestFilterAndExecuteBatch2(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: MultipleInsertFollowedByRangeDeleteOnDifferentPK")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: MultipleInsertFollowedByRangeDeleteOnDifferentPK")
 			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 
@@ -1551,7 +1551,7 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKCase1")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllOperationWithSamePKCase1")
 			assert.Equal(t, ExecuteBatchDMLAPI, spannerAPI)
 		}
 		_, err = getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_comm_upload_event WHERE `user_id`='same_pk_9' order by upload_time;")
@@ -1629,7 +1629,7 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKey")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllOperationWithSamePKUpdateMapByKey")
 			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		_, err = getDataFromSpanner(ctx, sc.Client, fmt.Sprintf("select * from %s WHERE `user_id`='same_pk_10';", TABLE_ADDRESS))
@@ -1707,7 +1707,7 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
 			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_11';")
@@ -1798,7 +1798,7 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase3")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase3")
 			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_12';")
@@ -1883,7 +1883,7 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
 			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_13';")
@@ -1941,7 +1941,7 @@ func TestFilterAndExecuteBatch3(t *testing.T) {
 		if err != nil {
 			t.Errorf(ErrorWhileFilterAndExecuteBatch, err)
 		} else {
-			assert.Equal(t, 0, len(result.Data), "Unexpected number of rows in result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
+			assert.Equal(t, &message.VoidResult{}, result, "Unexpected result for batch test case: AllOperationWithSamePKUpdateMapByKeyCase2")
 			assert.Equal(t, UnknownOrMixedAPI, spannerAPI)
 		}
 		data, err := getDataFromSpanner(ctx, sc.Client, "select * from keyspace1_address_book_entries WHERE `user_id`='same_pk_13';")
