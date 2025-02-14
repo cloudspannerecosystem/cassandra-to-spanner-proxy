@@ -1,5 +1,9 @@
 # Changelog
 
+# [1.0.6] - 2025-02-14
+### Bug Fixes
+* Return VoidResult for Batch message.
+
 # [1.0.5] - 2025-02-10
 
 ### Features
