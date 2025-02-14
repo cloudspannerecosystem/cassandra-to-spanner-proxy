@@ -87,7 +87,7 @@ type SpannerClientIface interface {
 	InsertOrUpdateMutation(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error)
 	DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error)
 	UpdateMapByKey(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error)
-	FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, string, error)
+	FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.VoidResult, string, error)
 	GetTableConfigs(ctx context.Context, query responsehandler.QueryMetadata) (map[string]map[string]*tableConfig.Column, map[string][]tableConfig.Column, *SystemQueryMetadataCache, error)
 }
 
@@ -714,7 +714,7 @@ func updateMapWithNewValues(mapValue map[string]bool, query *responsehandler.Que
 // Returns:
 //   - Error if the transaction fails.
 
-func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
+func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*responsehandler.QueryMetadata) (*message.VoidResult, string, error) {
 	otelgo.AddAnnotation(ctx, FilterAndExecuteBatch)
 	var spannerAPI string
 	_, err := sc.Client.ReadWriteTransactionWithOptions(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
@@ -772,7 +772,7 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 		return nil
 	}, spanner.TransactionOptions{CommitOptions: sc.BuildCommitOptions()})
 
-	return &rowsResult, spannerAPI, err
+	return &message.VoidResult{}, spannerAPI, err
 }
 
 // prepareQueries - Prepares mutations and DML statements for the transaction based on the provided queries.
