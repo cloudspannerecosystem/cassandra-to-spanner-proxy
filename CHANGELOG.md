@@ -1,5 +1,9 @@
 # Changelog
 
+# [1.0.7] - 2025-02-25
+### Others
+* Bump dependency version for Spanner Go Client Library.
+
 # [1.0.6] - 2025-02-14
 ### Bug Fixes
 * Return VoidResult for Batch message.
