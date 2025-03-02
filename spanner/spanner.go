@@ -564,7 +564,6 @@ func ignoreInsert(iter *spanner.RowIterator) (bool, error) {
 
 func (sc *SpannerClient) DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	otelgo.AddAnnotation(ctx, DeleteUsingMutations)
-
 	var err error
 	if sc.ReplayProtection {
 		_, err = sc.Client.Apply(ctx,
@@ -718,6 +717,20 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 	otelgo.AddAnnotation(ctx, FilterAndExecuteBatch)
 	var spannerAPI string
 	_, err := sc.Client.ReadWriteTransactionWithOptions(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+
+		// Perform a simple query, so that it will result into inline begin transaction,
+		// a valid transaction handle to be returned that will be used by the following
+		// requests.
+		// TODO: Remove this once backend fix is available.
+		iter := txn.Query(ctx, spanner.Statement{SQL: "SELECT 1"})
+		defer iter.Stop()
+		for {
+			_, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+		}
+
 		filteredResponse, err := sc.filterBatch(ctx, txn, queries)
 		if err != nil {
 			return fmt.Errorf("failed to filter queries: %w", err)
@@ -736,6 +749,7 @@ func (sc *SpannerClient) FilterAndExecuteBatch(ctx context.Context, queries []*r
 
 			sc.Logger.Debug("Executing Mutations from the filtered batch", zap.Int("mutationCount", len(ms)))
 			if len(ms) > 0 {
+
 				if err := txn.BufferWrite(ms); err != nil {
 					return fmt.Errorf("failed to buffer write mutations: %w", err)
 				}
