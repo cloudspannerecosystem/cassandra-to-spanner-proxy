@@ -226,6 +226,15 @@ func (sc *SpannerClient) InsertUpdateOrDeleteStatement(ctx context.Context, quer
 		return nil
 	}, spanner.TransactionOptions{CommitOptions: sc.BuildCommitOptions()})
 
+	if err != nil && strings.Contains(err.Error(), "The transaction contains too many mutations") {
+		sc.Logger.Debug("Falling back to partitioned dml API")
+		_, err = sc.Client.PartitionedUpdate(ctx, *buildStmt(&query))
+	}
+
+	if err != nil {
+		sc.Logger.Error("Error while InsertUpdateOrDeleteStatement - "+query.Query, zap.Error(err))
+	}
+
 	return &rowsResult, ExecuteStreamingSqlAPI, err
 }
 
@@ -569,7 +578,14 @@ func (sc *SpannerClient) DeleteUsingMutations(ctx context.Context, query respons
 		spanner.ApplyAtLeastOnce(),
 		spanner.ApplyCommitOptions(sc.BuildCommitOptions()))
 	if err != nil {
-		sc.Logger.Error("Error while Mutation Delete - "+query.Query, zap.Error(err))
+		if strings.Contains(err.Error(), "The transaction contains too many mutations") {
+			sc.Logger.Debug("Falling back to partitioned dml API")
+			_, err = sc.Client.PartitionedUpdate(ctx, *buildStmt(&query))
+		}
+
+		if err != nil {
+			sc.Logger.Error("Error while Mutation Delete - "+query.Query, zap.Error(err))
+		}
 		return nil, CommitAPI, err
 	}
 
