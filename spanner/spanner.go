@@ -564,18 +564,10 @@ func ignoreInsert(iter *spanner.RowIterator) (bool, error) {
 
 func (sc *SpannerClient) DeleteUsingMutations(ctx context.Context, query responsehandler.QueryMetadata) (*message.RowsResult, string, error) {
 	otelgo.AddAnnotation(ctx, DeleteUsingMutations)
-
-	var err error
-	if sc.ReplayProtection {
-		_, err = sc.Client.Apply(ctx,
-			[]*spanner.Mutation{buildDeleteMutation(&query)},
-			spanner.ApplyCommitOptions(sc.BuildCommitOptions()))
-	} else {
-		_, err = sc.Client.Apply(ctx,
-			[]*spanner.Mutation{buildDeleteMutation(&query)},
-			spanner.ApplyAtLeastOnce(),
-			spanner.ApplyCommitOptions(sc.BuildCommitOptions()))
-	}
+	_, err := sc.Client.Apply(ctx,
+		[]*spanner.Mutation{buildDeleteMutation(&query)},
+		spanner.ApplyAtLeastOnce(),
+		spanner.ApplyCommitOptions(sc.BuildCommitOptions()))
 	if err != nil {
 		sc.Logger.Error("Error while Mutation Delete - "+query.Query, zap.Error(err))
 		return nil, CommitAPI, err
@@ -800,11 +792,7 @@ func (sc *SpannerClient) prepareQueriesAsBatch(ctx context.Context, txn *spanner
 				ms = append(ms, buildInsertOrUpdateMutation(query))
 			}
 		case deleteType:
-			if filteredResponse.CanExecuteAsMutations && len(query.MutationKeyRange) > 0 {
-				ms = append(ms, buildDeleteMutation(query))
-			} else {
-				stmts = append(stmts, *buildStmt(query))
-			}
+			stmts = append(stmts, *buildStmt(query))
 		case updateType:
 			stmt, err := sc.prepareStatement(ctx, txn, query)
 			if err != nil {
@@ -845,13 +833,9 @@ func (sc *SpannerClient) executeQueriesInSequence(ctx context.Context, txn *span
 				ms = append(ms, buildInsertOrUpdateMutation(query))
 			}
 		case deleteType:
-			if len(query.MutationKeyRange) > 0 {
-				ms = append(ms, buildDeleteMutation(query))
-			} else {
-				_, err := txn.Update(ctx, *buildStmt(query))
-				if err != nil {
-					return fmt.Errorf("failed to execute batch update: %w", err)
-				}
+			_, err := txn.Update(ctx, *buildStmt(query))
+			if err != nil {
+				return fmt.Errorf("failed to execute batch update: %w", err)
 			}
 		case updateType:
 			stmt, err := sc.prepareStatement(ctx, txn, query)
