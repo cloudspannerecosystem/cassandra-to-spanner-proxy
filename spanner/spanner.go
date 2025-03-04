@@ -231,6 +231,10 @@ func (sc *SpannerClient) InsertUpdateOrDeleteStatement(ctx context.Context, quer
 		_, err = sc.Client.PartitionedUpdate(ctx, *buildStmt(&query))
 	}
 
+	if err != nil {
+		sc.Logger.Error("Error while InsertUpdateOrDeleteStatement - "+query.Query, zap.Error(err))
+	}
+
 	return &rowsResult, ExecuteStreamingSqlAPI, err
 }
 
