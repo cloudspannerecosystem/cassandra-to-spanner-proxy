@@ -1,5 +1,10 @@
 # Changelog
 
+# [1.0.8] - 2025-03-04
+### Enhancements
+* Allow delete to execute via DML statement.
+* Add fallback to PDML API if a transaction contains too many mutations.
+
 # [1.0.7] - 2025-02-25
 ### Others
 * Bump dependency version for Spanner Go Client Library.
