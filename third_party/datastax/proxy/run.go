@@ -319,6 +319,7 @@ func Run(ctx context.Context, args []string) int {
 	logger.Info("Protocol Version:" + version.String())
 	logger.Info("CQL Version:" + cqlVersion)
 	logger.Info("Release Version:" + releaseVersion)
+	logger.Info("Cassandra to Cloud Spanner Proxy Adapter Version:" + proxyReleaseVersion)
 	logger.Info("Partitioner:" + partitioner)
 	logger.Info("Data Center:" + cfg.DataCenter)
 	logger.Info("Configured keyspace name flattening status", zap.Bool("isKeyspaceFlatteningEnabled", UserConfig.CassandraToSpannerConfigs.KeyspaceFlatter))
