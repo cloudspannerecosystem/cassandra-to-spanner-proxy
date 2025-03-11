@@ -85,7 +85,7 @@ func DecodeBytesToSpannerColumnType(b []byte, choice datatype.DataType, protocol
 			return nil, fmt.Errorf("error while casting to int64")
 		}
 	case primitive.DataTypeCodeBoolean:
-		if b[0] == 0 {
+		if len(b) == 0 || b[0] == 0 {
 			return false, nil
 		} else {
 			return true, nil
