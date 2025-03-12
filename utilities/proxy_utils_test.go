@@ -202,7 +202,7 @@ func TestDecodeBytesToSpannerColumnType(t *testing.T) {
 		},
 		{
 			name:      "Decode nil Float",
-			b:         []byte{},
+			b:         nil,
 			choice:    datatype.Float,
 			protocalV: protocalV,
 			want:      nil,
