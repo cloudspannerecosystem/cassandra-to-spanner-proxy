@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.0.9] - 2025-03-12
+### Bug Fixes
+* Handle index of out range error.
+* Handle Null and Empty bytes while decoding Int and Float data types.
+
+### Enhancements
+* Log current proxy adapter release version on startup.
+
 # [1.0.8] - 2025-03-04
 ### Enhancements
 * Allow delete to execute via DML statement.
