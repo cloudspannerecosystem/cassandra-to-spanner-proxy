@@ -76,7 +76,7 @@ func DecodeBytesToSpannerColumnType(b []byte, choice datatype.DataType, protocol
 	case primitive.DataTypeCodeInt:
 		bytes, err := proxycore.DecodeType(datatype.Int, protocolVersion, b)
 		// casting result to int64 as int32 not supported by spanner
-		if err != nil {
+		if err != nil || bytes == nil {
 			return nil, err
 		}
 		if res, ok := bytes.(int32); ok {
@@ -101,7 +101,7 @@ func DecodeBytesToSpannerColumnType(b []byte, choice datatype.DataType, protocol
 	case primitive.DataTypeCodeFloat:
 		bytes, err := proxycore.DecodeType(datatype.Float, protocolVersion, b)
 		// casting result to float64 as float32 not supported by spanner
-		if err != nil {
+		if err != nil || bytes == nil {
 			return nil, err
 		}
 		if res, ok := bytes.(float32); ok {
@@ -117,7 +117,7 @@ func DecodeBytesToSpannerColumnType(b []byte, choice datatype.DataType, protocol
 		}
 	case primitive.DataTypeCodeUuid:
 		decodedUuid, err := proxycore.DecodeType(datatype.Uuid, protocolVersion, b)
-		if err != nil {
+		if err != nil || decodedUuid == nil {
 			return nil, err
 		}
 		if primitiveUuid, ok := decodedUuid.(primitive.UUID); ok {
