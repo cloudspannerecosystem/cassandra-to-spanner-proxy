@@ -1,5 +1,6 @@
 # Cassandra to Cloud Spanner Proxy Adapter
-
+> [!NOTE] 
+> We introduced the newer official [go-spanner-cassandra](https://github.com/googleapis/go-spanner-cassandra/blob/main/README.md) and [java-spanner-cassandra](https://github.com/googleapis/java-spanner-cassandra/blob/main/README.md) clients(currently in public preview). These clients enable in-process use of gocql (for Go) or the Java Cassandra driver with [Spanner's native v4 Cassandra protocol support](https://cloud.google.com/spanner/docs/non-relational/connect-cassandra-adapter), eliminating the need for running this proxy adapter as a sidecar.
 ## Current Released  Version
 
 Version `1.0.9`
@@ -8,8 +9,6 @@ Version `1.0.9`
 Cassandra to Cloud Spanner Proxy Adapter is designed to forward your application's CQL traffic to Spanner database service. It listens on a local address and securely forwards that traffic.
 
 ## Table of Contents
-
-
 - [When to use cassandra-to-spanner-proxy?](#when-to-use-cassandra-to-spanner-proxy)
 - [Prerequisites](#prerequisites)
 - [Cloud Spanner Instructions](#cloud-spanner-instructions)
