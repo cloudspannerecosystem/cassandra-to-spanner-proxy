@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.1.0] - 2025-04-29
+### Features
+* Enable multiplexed session by default for all writes.
+
+### Documentations
+* Add references to new java&go spanner-cassandra clients in readme.
+
 # [1.0.9] - 2025-03-12
 ### Bug Fixes
 * Handle index of out range error.
