@@ -1957,6 +1957,8 @@ var NewSpannerClient = func(ctx context.Context, config Config, ot *otelgo.OpenT
 	if os.Getenv("SPANNER_EMULATOR_HOST") == "" {
 		// Enable multiplexed sessions
 		os.Setenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS", "true")
+		os.Setenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS", "true")
+		os.Setenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_FOR_RW", "true")
 	}
 	// Implementation
 	// Configure gRPC connection pool with minimum connection timeout
