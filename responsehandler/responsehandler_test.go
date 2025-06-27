@@ -22,13 +22,13 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner/apiv1/spannerpb"
-	"github.com/datastax/go-cassandra-native-protocol/datatype"
-	"github.com/datastax/go-cassandra-native-protocol/message"
-	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/responsehandler"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/tableConfig"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/third_party/datastax/proxycore"
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/utilities"
+	"github.com/datastax/go-cassandra-native-protocol/datatype"
+	"github.com/datastax/go-cassandra-native-protocol/message"
+	"github.com/datastax/go-cassandra-native-protocol/primitive"
 	"go.uber.org/zap"
 )
 
@@ -372,6 +372,10 @@ func TestBuildColumnMetadata(t *testing.T) {
 						Name:    "column11",
 						CQLType: "uuid",
 					},
+					"column12": {
+						Name:    "column12",
+						CQLType: "float",
+					},
 				},
 			},
 			Logger: zap.NewNop(),
@@ -393,6 +397,7 @@ func TestBuildColumnMetadata(t *testing.T) {
 			{Name: "column9", Type: &spannerpb.Type{Code: spannerpb.TypeCode_TIMESTAMP}},
 			{Name: "column10", Type: &spannerpb.Type{Code: spannerpb.TypeCode_STRING}},
 			{Name: "column11", Type: &spannerpb.Type{Code: spannerpb.TypeCode_STRING}},
+			{Name: "column12", Type: &spannerpb.Type{Code: spannerpb.TypeCode_FLOAT32}},
 		},
 	}
 
@@ -408,6 +413,7 @@ func TestBuildColumnMetadata(t *testing.T) {
 		"column9":  {CQLType: "bigint", DataType: datatype.Bigint},
 		"column10": {CQLType: "text", DataType: datatype.Varchar},
 		"column11": {CQLType: "uuid", DataType: datatype.Uuid},
+		"column12": {CQLType: "float", DataType: datatype.Float},
 	}
 
 	rowFuncs, cmd, err := th.BuildColumnMetadata(rowType, primitive.ProtocolVersion4, aliasMap, "table1", "keyspace1")
@@ -416,12 +422,12 @@ func TestBuildColumnMetadata(t *testing.T) {
 		t.Fatalf("Expected no error, but got: %v", err)
 	}
 
-	if len(rowFuncs) != 11 { // Excluding spannerTTLColumn and spannerTSColumn
-		t.Fatalf("Expected 10 rowFuncs, but got: %d", len(rowFuncs))
+	if len(rowFuncs) != 12 { // Excluding spannerTTLColumn and spannerTSColumn
+		t.Fatalf("Expected 12 rowFuncs, but got: %d", len(rowFuncs))
 	}
 
-	if len(cmd) != 11 { // Excluding spannerTTLColumn and spannerTSColumn
-		t.Fatalf("Expected 10 column metadata entries, but got: %d", len(cmd))
+	if len(cmd) != 12 { // Excluding spannerTTLColumn and spannerTSColumn
+		t.Fatalf("Expected 12 column metadata entries, but got: %d", len(cmd))
 	}
 
 	expectedCmd := []*message.ColumnMetadata{
@@ -436,6 +442,7 @@ func TestBuildColumnMetadata(t *testing.T) {
 		{Keyspace: "keyspace1", Table: "table1", Name: "column9", Index: 9, Type: datatype.Bigint},
 		{Keyspace: "keyspace1", Table: "table1", Name: "column10", Index: 10, Type: datatype.Varchar},
 		{Keyspace: "keyspace1", Table: "table1", Name: "column11", Index: 11, Type: datatype.Uuid},
+		{Keyspace: "keyspace1", Table: "table1", Name: "column12", Index: 12, Type: datatype.Float},
 	}
 
 	for i, col := range cmd {
