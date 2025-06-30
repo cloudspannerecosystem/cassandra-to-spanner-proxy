@@ -204,8 +204,9 @@ func GetSpannerColumnType(cqlType string) string {
 //     Cassandra data types. This helps in identifying unsupported or incorrectly specified
 //     data types.
 func GetCassandraColumnType(choice string) (datatype.DataType, error) {
-	switch choice {
-	case "map<text, boolean>":
+	normalizedChoice := strings.ReplaceAll(choice, " ", "")
+	switch normalizedChoice {
+	case "map<text,boolean>":
 		return MapBooleanCassandraType, nil
 	case "list<text>", "frozen<list<text>>":
 		return ListTextCassandraType, nil
@@ -227,17 +228,17 @@ func GetCassandraColumnType(choice string) (datatype.DataType, error) {
 		return datatype.Double, nil
 	case "float":
 		return datatype.Float, nil
-	case "map<text, bigint>":
+	case "map<text,bigint>":
 		return MapBigintCassandraType, nil
-	case "map<text, text>":
+	case "map<text,text>":
 		return MapTextCassandraType, nil
-	case "map<text, timestamp>":
+	case "map<text,timestamp>":
 		return MapTimestampCassandraType, nil
-	case "map<text, int>":
+	case "map<text,int>":
 		return MapIntCassandraType, nil
-	case "map<text, double>":
+	case "map<text,double>":
 		return MapDoubleCassandraType, nil
-	case "map<text, date>":
+	case "map<text,date>":
 		return MapDateCassandraType, nil
 	case "list<boolean>", "frozen<list<boolean>>":
 		return ListBooleanCassandraType, nil
