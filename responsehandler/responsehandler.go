@@ -19,6 +19,7 @@ package responsehandler
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/cloudspannerecosystem/cassandra-to-spanner-proxy/translator"
@@ -616,23 +617,41 @@ func (th *TypeHandler) HandleMapStringBool(
 	i int,
 	row *spanner.Row,
 ) ([]byte, error) {
-	var detailsField map[string]bool
 	jsonStr, err := th.GetJsonString(i, row)
 	if err != nil {
 		return nil, err
 	}
-	if err := json.Unmarshal([]byte(jsonStr), &detailsField); err != nil {
-		return nil, fmt.Errorf(
-			"error deserializing JSON to map[string]bool: %v",
-			err,
-		)
+
+	// Unmarshal into a map that accepts any value type to handle both
+	// `{"key": true}` and `{"key": "true"}`.
+	var intermediateMap map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &intermediateMap); err != nil {
+		return nil, fmt.Errorf("error deserializing JSON to map[string]bool: %w", err)
 	}
-	bytes, err := proxycore.EncodeType(
+
+	finalMap := make(map[string]bool, len(intermediateMap))
+
+	// Process the intermediate map into the final, strongly-typed map.
+	for key, value := range intermediateMap {
+		switch v := value.(type) {
+		case bool:
+			finalMap[key] = v
+		case string:
+			parsedBool, err := strconv.ParseBool(v)
+			if err != nil {
+				return nil, fmt.Errorf("key '%s' contains non-boolean string value '%s'", key, v)
+			}
+			finalMap[key] = parsedBool
+		default:
+			return nil, fmt.Errorf("key '%s' has an unsupported value type '%T'", key, v)
+		}
+	}
+
+	return proxycore.EncodeType(
 		utilities.MapBooleanCassandraType,
 		th.ProtocalV,
-		detailsField,
+		finalMap,
 	)
-	return bytes, err
 }
 
 // handle encoding spanner data to cassandra map<varchar, varchar> type
