@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.1.1] - 2025-07-31
+### Features
+* Support select float32 column as float.
+
+### Bug Fixes
+* Make GetCassandraColumnType space agnostic.
+* Handle boolean as string in string bool map.
+
 # [1.1.0] - 2025-04-29
 ### Features
 * Enable multiplexed session by default for all writes.
