@@ -906,6 +906,27 @@ func TestParseWhereByClause(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name:      "Valid input with question mark",
+			input:     "WHERE column1 = '?'",
+			tableName: "test_table",
+			keyspace:  "key_space",
+			expectedResult: &ClauseResponse{
+				Clauses: []Clause{
+					{
+						Column:       "column1",
+						Operator:     "=",
+						Value:        "@value1",
+						IsPrimaryKey: true,
+					},
+				},
+				Params: map[string]interface{}{
+					"value1": "?",
+				},
+				ParamKeys: []string{"value1"},
+			},
+			expectedErr: nil,
+		},
+		{
 			name:      "Valid input with multiple clauses",
 			input:     "WHERE column1 = 'test' AND column2 < '0x0000000000000003'",
 			tableName: "test_table",

@@ -490,14 +490,15 @@ func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConf
 				value = strings.ReplaceAll(value, "'", "")
 
 				if value != questionMark {
-
 					val, err := formatValues(value, columnType.SpannerType, columnType.CQLType)
 					if err != nil {
 						return nil, err
 					}
-
 					params[placeholder] = val
+				} else {
+					params[placeholder] = "?"
 				}
+
 			} else {
 				lower := strings.ToLower(val.GetText())
 				if !strings.Contains(lower, "in?") {
