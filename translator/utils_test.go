@@ -880,6 +880,7 @@ func TestParseWhereByClause(t *testing.T) {
 		input          string
 		tableName      string
 		tableConfig    tableConfig.TableConfig
+		isQuery        bool
 		keyspace       string
 		expectedResult *ClauseResponse
 		expectedErr    error
@@ -1033,7 +1034,7 @@ func TestParseWhereByClause(t *testing.T) {
 				input = p.WhereSpec()
 
 			}
-			result, err := parseWhereByClause(input, test.tableName, tableConfig)
+			result, err := parseWhereByClause(input, test.tableName, tableConfig, true)
 
 			// Validate error
 			if (err == nil && test.expectedErr != nil) || (err != nil && test.expectedErr == nil) || (err != nil && test.expectedErr != nil && err.Error() != test.expectedErr.Error()) {

@@ -158,7 +158,7 @@ func createSpannerSelectQueryForMapUpdate(table string, columns string, clauses 
 //   - query: CQL Update query
 //
 // Returns: UpdateQueryMap struct and error if any
-func (t *Translator) ToSpannerUpdate(keyspace string, queryStr string) (*UpdateQueryMap, error) {
+func (t *Translator) ToSpannerUpdate(keyspace string, queryStr string, isQuery bool) (*UpdateQueryMap, error) {
 	lowerQuery := strings.ToLower(queryStr)
 	query := renameLiterals(queryStr)
 	p, err := NewCqlParser(query, t.Debug)
@@ -352,7 +352,7 @@ func (t *Translator) ToSpannerUpdate(keyspace string, queryStr string) (*UpdateQ
 	var clauseResponse ClauseResponse
 
 	if hasWhere(lowerQuery) {
-		resp, err := parseWhereByClause(updateObj.WhereSpec(), tableName, t.TableConfig)
+		resp, err := parseWhereByClause(updateObj.WhereSpec(), tableName, t.TableConfig, isQuery)
 		if err != nil {
 			return nil, err
 		}

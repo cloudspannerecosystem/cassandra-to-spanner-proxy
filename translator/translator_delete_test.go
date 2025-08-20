@@ -354,7 +354,7 @@ func TestTranslator_ToSpannerDelete(t *testing.T) {
 				Logger:      tt.fields.Logger,
 				TableConfig: tableConfig,
 			}
-			got, err := tr.ToSpannerDelete(tt.args.keyspace, tt.args.query)
+			got, err := tr.ToSpannerDelete(tt.args.keyspace, tt.args.query, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerDelete() error = %v, wantErr %v", err, tt.wantErr)
 				return

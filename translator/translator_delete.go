@@ -45,7 +45,7 @@ func createSpannerDeleteQuery(table string, clauses []Clause) string {
 //   - query: CQL Delete query
 //
 // Returns: DeleteQueryMap struct and error if any
-func (t *Translator) ToSpannerDelete(keyspace string, queryStr string) (*DeleteQueryMap, error) {
+func (t *Translator) ToSpannerDelete(keyspace string, queryStr string, isQuery bool) (*DeleteQueryMap, error) {
 	lowerQuery := strings.ToLower(queryStr)
 	query := renameLiterals(queryStr)
 	p, err := NewCqlParser(query, t.Debug)
@@ -95,7 +95,7 @@ func (t *Translator) ToSpannerDelete(keyspace string, queryStr string) (*DeleteQ
 	var clauseResponse ClauseResponse
 
 	if hasWhere(lowerQuery) {
-		resp, err := parseWhereByClause(deleteObj.WhereSpec(), tableSpec.TableName, t.TableConfig)
+		resp, err := parseWhereByClause(deleteObj.WhereSpec(), tableSpec.TableName, t.TableConfig, isQuery)
 		if err != nil {
 			return nil, err
 		}
