@@ -1514,10 +1514,10 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 		}
 	} else {
 		var result *message.RowsResult
-
+		var isQuery = true
 		switch queryType {
 		case selectType:
-			queryMetadata, err := c.proxy.translator.ToSpannerSelect(c.keyspace, msg.query, true)
+			queryMetadata, err := c.proxy.translator.ToSpannerSelect(c.keyspace, msg.query, isQuery)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1594,7 +1594,7 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 
 			c.sender.Send(raw.Header, result)
 		case deleteType:
-			queryMetadata, err := c.proxy.translator.ToSpannerDelete(c.keyspace, msg.query, true)
+			queryMetadata, err := c.proxy.translator.ToSpannerDelete(c.keyspace, msg.query, isQuery)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})
@@ -1633,7 +1633,7 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 			result.Metadata.ColumnCount = int32(len(VariableMetadata))
 			c.sender.Send(raw.Header, result)
 		case updateType:
-			queryMetadata, err := c.proxy.translator.ToSpannerUpdate(c.keyspace, msg.query, true)
+			queryMetadata, err := c.proxy.translator.ToSpannerUpdate(c.keyspace, msg.query, isQuery)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
 				c.sender.Send(raw.Header, &message.Invalid{ErrorMessage: err.Error()})

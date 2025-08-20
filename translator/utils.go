@@ -490,7 +490,7 @@ func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConf
 				}
 
 				if isQuery && value == "'?'" {
-					params[placeholder] = "?"
+					params[placeholder] = questionMark
 				} else {
 					value = strings.ReplaceAll(value, "'", "")
 					if value != questionMark {
