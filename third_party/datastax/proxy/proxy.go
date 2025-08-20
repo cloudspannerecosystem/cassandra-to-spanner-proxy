@@ -879,7 +879,6 @@ func (c *client) prepareInsertType(raw *frame.RawFrame, msg *message.Prepare, id
 // function to handle and select query of prepared type
 func (c *client) prepareSelectType(raw *frame.RawFrame, msg *message.Prepare, id [16]byte) ([]*message.ColumnMetadata, []*message.ColumnMetadata, error) {
 	var variableColumns, columnsWithInOp []string
-	fmt.Println("inside parepare select")
 	queryMetadata, err := c.proxy.translator.ToSpannerSelect(c.keyspace, msg.Query, false)
 	if err != nil {
 		c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.Query), zap.Error(err))
@@ -1518,7 +1517,6 @@ func (c *client) handleQuery(raw *frame.RawFrame, msg *partialQuery) {
 
 		switch queryType {
 		case selectType:
-			fmt.Println("inside raw selcet")
 			queryMetadata, err := c.proxy.translator.ToSpannerSelect(c.keyspace, msg.query, true)
 			if err != nil {
 				c.proxy.logger.Error(translatorErrorMessage, zap.String(Query, msg.query), zap.Error(err))
