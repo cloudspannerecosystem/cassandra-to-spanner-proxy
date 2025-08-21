@@ -415,7 +415,7 @@ func NewCqlParser(cqlQuery string, isDebug bool) (*cql.CqlParser, error) {
 //   - input: The Where Spec context from the antlr Parser.
 //   - tableName - Table Name
 //   - tableConfig - JSON Config which maintains column and its datatypes info.
-//   - isQuery - Whether or not this where clause is part of query statement.
+//   - isSimpleQuery - Whether or not this where clause is part of query statement.
 //
 // Returns: ClauseResponse and an error if any.
 func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConfig *tableConfig.TableConfig, isSimpleQuery bool) (*ClauseResponse, error) {
