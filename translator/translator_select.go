@@ -375,7 +375,7 @@ func getSpannerSelectQuery(t *Translator, data *SelectQueryMap) (string, error) 
 //   - originalQuery: CQL Select statement
 //
 // Returns: SelectQueryMap struct and error if any
-func (t *Translator) ToSpannerSelect(keyspace string, originalQuery string, isQuery bool) (*SelectQueryMap, error) {
+func (t *Translator) ToSpannerSelect(keyspace string, originalQuery string, isSimpleQuery bool) (*SelectQueryMap, error) {
 	lowerQuery := strings.ToLower(originalQuery)
 	//Create copy of cassandra query where literals are substituted with a suffix
 	query := renameLiterals(originalQuery)
@@ -413,7 +413,7 @@ func (t *Translator) ToSpannerSelect(keyspace string, originalQuery string, isQu
 	var clauseResponse ClauseResponse
 
 	if hasWhere(lowerQuery) {
-		resp, err := parseWhereByClause(selectObj.WhereSpec(), tableSpec.TableName, t.TableConfig, isQuery)
+		resp, err := parseWhereByClause(selectObj.WhereSpec(), tableSpec.TableName, t.TableConfig, isSimpleQuery)
 		if err != nil {
 			return nil, err
 		}

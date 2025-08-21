@@ -418,7 +418,7 @@ func NewCqlParser(cqlQuery string, isDebug bool) (*cql.CqlParser, error) {
 //   - isQuery - Whether or not this where clause is part of query statement.
 //
 // Returns: ClauseResponse and an error if any.
-func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConfig *tableConfig.TableConfig, isQuery bool) (*ClauseResponse, error) {
+func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConfig *tableConfig.TableConfig, isSimpleQuery bool) (*ClauseResponse, error) {
 	if input == nil {
 		return nil, errors.New("no input parameters found for clauses")
 	}
@@ -489,7 +489,7 @@ func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConf
 					return nil, errors.New("could not parse value from query for one of the clauses")
 				}
 
-				if isQuery && value == "'?'" {
+				if isSimpleQuery && value == "'?'" {
 					params[placeholder] = questionMark
 				} else {
 					value = strings.ReplaceAll(value, "'", "")
