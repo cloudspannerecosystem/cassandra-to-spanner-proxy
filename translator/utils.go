@@ -415,9 +415,10 @@ func NewCqlParser(cqlQuery string, isDebug bool) (*cql.CqlParser, error) {
 //   - input: The Where Spec context from the antlr Parser.
 //   - tableName - Table Name
 //   - tableConfig - JSON Config which maintains column and its datatypes info.
+//   - isSimpleQuery - Whether or not this where clause is part of query statement.
 //
 // Returns: ClauseResponse and an error if any.
-func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConfig *tableConfig.TableConfig) (*ClauseResponse, error) {
+func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConfig *tableConfig.TableConfig, isSimpleQuery bool) (*ClauseResponse, error) {
 	if input == nil {
 		return nil, errors.New("no input parameters found for clauses")
 	}
@@ -487,16 +488,18 @@ func parseWhereByClause(input cql.IWhereSpecContext, tableName string, tableConf
 				if value == "" {
 					return nil, errors.New("could not parse value from query for one of the clauses")
 				}
-				value = strings.ReplaceAll(value, "'", "")
 
-				if value != questionMark {
-
-					val, err := formatValues(value, columnType.SpannerType, columnType.CQLType)
-					if err != nil {
-						return nil, err
+				if isSimpleQuery && value == "'?'" {
+					params[placeholder] = questionMark
+				} else {
+					value = strings.ReplaceAll(value, "'", "")
+					if value != questionMark {
+						val, err := formatValues(value, columnType.SpannerType, columnType.CQLType)
+						if err != nil {
+							return nil, err
+						}
+						params[placeholder] = val
 					}
-
-					params[placeholder] = val
 				}
 			} else {
 				lower := strings.ToLower(val.GetText())

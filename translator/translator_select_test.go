@@ -539,7 +539,7 @@ func TestTranslator_ToSpannerSelect(t *testing.T) {
 				TableConfig:     tableConfig,
 				UseRowTimestamp: false,
 			}
-			got, err := tr.ToSpannerSelect(tt.args.keyspace, tt.args.query)
+			got, err := tr.ToSpannerSelect(tt.args.keyspace, tt.args.query, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerSelect() error = %v, wantErr %v", err, tt.wantErr)
 				return

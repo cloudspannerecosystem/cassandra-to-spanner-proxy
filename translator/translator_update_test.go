@@ -250,7 +250,7 @@ func TestTranslator_ToSpannerUpdate(t *testing.T) {
 				UseRowTimestamp: true,
 				UseRowTTL:       true,
 			}
-			got, err := tr.ToSpannerUpdate(tt.args.keyspace, tt.args.query)
+			got, err := tr.ToSpannerUpdate(tt.args.keyspace, tt.args.query, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerUpdate() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -326,7 +326,7 @@ func TestTranslator_ToSpannerUpdateWhenUsingTSTTLIsDisabled(t *testing.T) {
 				UseRowTimestamp: false,
 				UseRowTTL:       false,
 			}
-			got, err := tr.ToSpannerUpdate(tt.args.keyspace, tt.args.query)
+			got, err := tr.ToSpannerUpdate(tt.args.keyspace, tt.args.query, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Translator.ToSpannerUpdate() error = %v, wantErr %v", err, tt.wantErr)
 				return

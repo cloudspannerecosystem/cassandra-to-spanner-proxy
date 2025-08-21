@@ -880,6 +880,7 @@ func TestParseWhereByClause(t *testing.T) {
 		input          string
 		tableName      string
 		tableConfig    tableConfig.TableConfig
+		isQuery        bool
 		keyspace       string
 		expectedResult *ClauseResponse
 		expectedErr    error
@@ -901,6 +902,46 @@ func TestParseWhereByClause(t *testing.T) {
 				Params: map[string]interface{}{
 					"value1": "test",
 				},
+				ParamKeys: []string{"value1"},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:      "Valid input with question mark in quotes",
+			input:     "WHERE column1 = '?'",
+			tableName: "test_table",
+			keyspace:  "key_space",
+			expectedResult: &ClauseResponse{
+				Clauses: []Clause{
+					{
+						Column:       "column1",
+						Operator:     "=",
+						Value:        "@value1",
+						IsPrimaryKey: true,
+					},
+				},
+				Params: map[string]interface{}{
+					"value1": "?",
+				},
+				ParamKeys: []string{"value1"},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:      "Valid input with question mark",
+			input:     "WHERE column1 = ?",
+			tableName: "test_table",
+			keyspace:  "key_space",
+			expectedResult: &ClauseResponse{
+				Clauses: []Clause{
+					{
+						Column:       "column1",
+						Operator:     "=",
+						Value:        "@value1",
+						IsPrimaryKey: true,
+					},
+				},
+				Params:    map[string]interface{}{},
 				ParamKeys: []string{"value1"},
 			},
 			expectedErr: nil,
@@ -1012,7 +1053,7 @@ func TestParseWhereByClause(t *testing.T) {
 				input = p.WhereSpec()
 
 			}
-			result, err := parseWhereByClause(input, test.tableName, tableConfig)
+			result, err := parseWhereByClause(input, test.tableName, tableConfig, true)
 
 			// Validate error
 			if (err == nil && test.expectedErr != nil) || (err != nil && test.expectedErr == nil) || (err != nil && test.expectedErr != nil && err.Error() != test.expectedErr.Error()) {
