@@ -1,6 +1,7 @@
 # Cassandra to Cloud Spanner Proxy Adapter
 > [!NOTE] 
-> We introduced the newer official [java-spanner-cassandra](https://github.com/googleapis/java-spanner-cassandra/blob/main/README.md) and [go-spanner-cassandra](https://github.com/googleapis/go-spanner-cassandra/blob/main/README.md) clients. These clients enable in-process use of gocql (for Go) or the Java Cassandra driver with [Spanner's native v4 Cassandra protocol support](https://cloud.google.com/spanner/docs/non-relational/connect-cassandra-adapter), eliminating the need for running this proxy adapter as a sidecar.
+> We introduced the newer official [java-spanner-cassandra](https://github.com/googleapis/java-spanner-cassandra/blob/main/README.md) and [go-spanner-cassandra](https://github.com/googleapis/go-spanner-cassandra/blob/main/README.md) clients. See https://cloud.google.com/spanner/docs/non-relational/connect-cassandra-adapter for more information.
+> 
 ## Current Released  Version
 
 Version `1.1.1`
