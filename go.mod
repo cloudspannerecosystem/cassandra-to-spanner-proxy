@@ -9,7 +9,7 @@ require (
 	github.com/alecthomas/kong v0.2.17
 	github.com/antlr4-go/antlr/v4 v4.13.0
 	github.com/datastax/go-cassandra-native-protocol v0.0.0-20211124104234-f6aea54fa801
-	github.com/docker/docker v27.1.2+incompatible
+	github.com/docker/docker v28.0.0+incompatible
 	github.com/gocql/gocql v1.6.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
